@@ -32,6 +32,6 @@ jspm_packages
 
 .idea
 
-src/**/.js
+src/**/*.js
 
-.js.map
+src/**/*.js.map

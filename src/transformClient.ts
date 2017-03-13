@@ -3,9 +3,10 @@ const Webpack = require("webpack");
 const WebpackDevServer = require("webpack-dev-server");
 const webpackConfig = require("../webpack.config.js");
 
-const debug = require("debug")("ndb:transform-client:app");
+const serverConfig = require("./serverConfig").default();
 
-const PORT = 9663;
+const localUri = `http://localhost:${serverConfig.port}`;
+const apiUri = `http://${serverConfig.graphQlHostname}:${serverConfig.graphQlPort}`;
 
 const compiler = Webpack(webpackConfig);
 const server = new WebpackDevServer(compiler, {
@@ -14,7 +15,7 @@ const server = new WebpackDevServer(compiler, {
     },
     proxy: {
         "/graphql": {
-            target: `http://localhost:9661`
+            target: apiUri
         }
     },
     publicPath: webpackConfig.output.publicPath,
@@ -23,6 +24,7 @@ const server = new WebpackDevServer(compiler, {
     noInfo: false,
     quiet: false});
 
-server.listen(PORT, "0.0.0.0", () =>{
-    debug(`Starting server on http://localhost:${PORT}`);
+server.listen(serverConfig.port, "0.0.0.0", () =>{
+    console.log(`Listening at ${localUri}/`);
+    console.log(`\t with graphql proxy to ${apiUri}`)
 });
