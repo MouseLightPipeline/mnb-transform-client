@@ -30,11 +30,11 @@ class TracingRow extends React.Component<ITracingRowProps, ITracingRowState> {
 
         return (<tr>
                 <td>{this.props.tracing.id.slice(0, 8)}</td>
-                <td>{this.props.tracing.janeliaTracing.filename}</td>
+                <td>{this.props.tracing.swcTracing ? this.props.tracing.swcTracing.filename : ""}</td>
                 <td>{this.props.tracing.nodeCount}</td>
-                <td>{this.props.tracing.registrationTransform.name}</td>
+                <td>{this.props.tracing.registrationTransform ? this.props.tracing.registrationTransform.name : ""}</td>
+                <td>{this.props.tracing.swcTracing ? this.formatCoordinates(this.props.tracing.swcTracing.firstNode) : ""}</td>
                 <td>{this.formatCoordinates(this.props.tracing.firstNode)}</td>
-                <td>{this.formatCoordinates(this.props.tracing.janeliaTracing.firstNode)}</td>
                 <td>{updatedAt.toLocaleString()}</td>
             </tr>
         );
@@ -55,7 +55,7 @@ const tracingsQuery = gql`{
     }
     createdAt
     updatedAt
-    janeliaTracing {
+    swcTracing {
       id
       annotator
       filename
@@ -136,7 +136,7 @@ export class TracingsTable extends React.Component<ITracingsTableProps, ITracing
                     <th>Source</th>
                     <th>Nodes</th>
                     <th>Transform</th>
-                    <th>Node 1 Janelia</th>
+                    <th>Node 1 SWC</th>
                     <th>Node 1 Transformed</th>
                     <th>Registration Applied</th>
                 </tr>

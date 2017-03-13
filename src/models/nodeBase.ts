@@ -1,6 +1,6 @@
 export interface INodeBase {
     sampleNumber: number;
-    parentNumner: number;
+    parentNumber: number;
     x: number;
     y: number;
     z: number;

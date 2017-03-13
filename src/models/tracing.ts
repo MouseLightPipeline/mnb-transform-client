@@ -6,7 +6,7 @@ export interface ITracing {
     id: string;
     nodeCount: number;
     firstNode: ITracingNode;
-    janeliaTracing: IJaneliaTracing;
+    swcTracing: IJaneliaTracing;
     registrationTransform: IRegistrationTransform;
     createdAt: number;
     updatedAt: number;
