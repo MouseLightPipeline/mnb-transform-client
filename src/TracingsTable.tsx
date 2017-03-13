@@ -104,7 +104,11 @@ interface ITracingsTableProps extends InjectedGraphQLProps<ITracingsGraphQLProps
 interface ITracingsTableState {
 }
 
-@graphql(tracingsQuery)
+@graphql(tracingsQuery, {
+    options: {
+        pollInterval: 5 * 1000
+    }
+})
 export class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableState> {
     private _timeout: Timer | number; // Typescript and browser can't agree.
 
