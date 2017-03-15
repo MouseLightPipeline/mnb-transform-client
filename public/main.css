@@ -7,6 +7,7 @@ body {
     font-size: 13px;
     line-height: 20px;
     color: #73879C;
+    background-color: #EAEDF1;
 }
 
 label {
@@ -14,10 +15,35 @@ label {
 }
 
 th {
-    font-weight: 500;
+    font-weight: 300;
+    font-size: 18px;
+    text-align: center;
+    border-bottom: 1px solid #ddd !important;
+}
+
+th.small {
+    font-size: 14px;
+}
+
+td {
+    /*border: 1px solid #aaa !important;*/
 }
 
 .panel-body {
+    padding: 0;
+}
+
+.panel-heading {
+    font-size: 16px;
+}
+
+.panel {
+    margin: 20px;
+    padding: 0;
+}
+
+.table {
+    margin: 0;
     padding: 0;
 }
 
@@ -55,10 +81,12 @@ a.list-group-item-menu,
 button.list-group-item-menu {
     color: #5bc0de;
 }
+
 a.list-group-item-menu .list-group-item-heading,
 button.list-group-item-menu .list-group-item-heading {
     color: inherit;
 }
+
 a.list-group-item-menu:hover,
 button.list-group-item-menu:hover,
 a.list-group-item-menu:focus,
@@ -66,6 +94,7 @@ button.list-group-item-menu:focus {
     color: #5bc0de;
     background-color: #c4e3f3;
 }
+
 a.list-group-item-menu.active,
 button.list-group-item-menu.active,
 a.list-group-item-menu.active:hover,

@@ -1,6 +1,7 @@
-import {IJaneliaNode} from "./janeliaNode";
+import {ISwcNode} from "./swcNode";
+import {ITracingStructure} from "./tracingStructure";
 
-export interface IJaneliaTracing {
+export interface ISwcTracing {
     id: string;
     filename: string;
     fileComments: string;
@@ -8,7 +9,8 @@ export interface IJaneliaTracing {
     offsetX: number;
     offsetY: number;
     offsetZ: number;
-    firstNode: IJaneliaNode;
+    tracingStructure: ITracingStructure;
+    firstNode: ISwcNode;
     createdAt: number;
     updatedAt: number;
 }
