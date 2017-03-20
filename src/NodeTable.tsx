@@ -54,8 +54,8 @@ interface ITracingNodeTableProps extends InjectedGraphQLProps<ITracingNodesGraph
 interface ITracingNodeTableState {
 }
 
-const nodeQuery = gql`query($id: String!, $offset: Int, $limit: Int) {
-    tracingNodePage(id: $id, offset: $offset, limit:$limit) {
+const nodeQuery = gql`query($page: PageInput) {
+    tracingNodePage(page: $page) {
         offset
         limit
         totalCount
@@ -83,7 +83,7 @@ const nodeQuery = gql`query($id: String!, $offset: Int, $limit: Int) {
 
 @graphql(nodeQuery, {
     options: ({tracing, offset, limit}) => ({
-        variables: {id: tracing ? tracing.id : "", offset, limit}
+        variables: {page: {tracingId: tracing ? tracing.id : "", offset, limit}}
     })
 })
 class NodeTable extends React.Component<ITracingNodeTableProps, ITracingNodeTableState> {

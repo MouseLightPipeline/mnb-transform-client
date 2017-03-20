@@ -171,9 +171,6 @@ const tracingsQuery = gql`{
       notes
       location
     }
-    nodes {
-      id
-    }
   }
 }`;
 
