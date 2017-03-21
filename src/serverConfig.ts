@@ -8,7 +8,7 @@ const configurations: any = {
     test: {
         port: 9663,
         graphQlEndpoint: "/graphql",
-        graphQlHostname: "localhost",
+        graphQlHostname: "transform-api",
         graphQlPort: 9661
     },
     production: {
