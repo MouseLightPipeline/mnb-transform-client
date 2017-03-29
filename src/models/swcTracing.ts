@@ -10,6 +10,7 @@ export interface ISwcTracing {
     offsetY: number;
     offsetZ: number;
     tracingStructure: ITracingStructure;
+    nodeCount: number;
     firstNode: ISwcNode;
     createdAt: number;
     updatedAt: number;

@@ -9,11 +9,15 @@ module.exports = {
         proxy: {
             "/graphql": {
                 target: `http://localhost:9661`
+            },
+            "/subscriptions/*": {
+                target: `http://localhost:9661`,
+                ws: true
             }
         }
     },
     output: {
-        filename: '/bundle.js',
+        filename: 'bundle.js',
         path: '/',
         publicPath: '/static/'
     },
@@ -23,7 +27,9 @@ module.exports = {
                 test: /\.tsx?$/,
                 loader: 'ts-loader',
                 exclude: /node_modules/
-            }
+            },
+            {test: /\.css$/, use: 'style-loader'},
+            {test: /\.css$/, use: 'css-loader'}
         ]
     },
     resolve: {

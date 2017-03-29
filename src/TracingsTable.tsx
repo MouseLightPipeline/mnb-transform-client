@@ -1,130 +1,15 @@
 import * as React from "react";
-import {Table} from "react-bootstrap";
-import moment = require("moment");
+import {Table, Form, FormGroup, ControlLabel, DropdownButton, InputGroup, MenuItem} from "react-bootstrap";
 import {graphql, InjectedGraphQLProps} from "react-apollo";
 import gql from "graphql-tag";
 
 import {ITracing} from "./models/tracing";
 import Timer = NodeJS.Timer;
-import {formatNodeLocation} from "./models/nodeBase";
-import {IRegistrationTransform} from "./models/registrationTransform";
-import {ISwcTracing} from "./models/swcTracing";
-import SyntheticEvent = React.SyntheticEvent;
+import {TracingRow} from "./TracingRow";
+import {ITracingStructure} from "./models/tracingStructure";
 
-const dendriteImage = require("file-loader!../public/dendrite.png");
-const axonImage = require("file-loader!../public/axon.png");
-
-const rowStyles = {
-    selected: {
-        backgroundColor: "#eeeeee"
-    },
-    unselected: {
-    }
-};
-
-const cellStyles = {
-    normal: {
-        textAlign: "center",
-        verticalAlign: "middle"
-    },
-    active: {
-        fontWeight: 800,
-        fontSize: "14px"
-    }
-};
-
-const imageStyle = {
-    maxHeight: "60px"
-};
-
-interface ITracingRowProps {
-    isSelected: boolean;
-    tracing: ITracing;
-    onSelectedTracing?(tracing: ITracing): void;
-}
-
-interface ITracingRowState {
-}
-
-function formatUpdatedAt(tracing: ITracing) {
-    if (!tracing.transformStatus) {
-        if (!tracing.transformedAt) {
-            return "Never";
-        }
-        return moment(new Date(tracing.transformedAt)).fromNow().toLocaleString();
-    }
-
-    if (tracing.transformStatus.inputNodeCount < 1) {
-        return "waiting to start";
-    }
-
-    const elapsed = moment(new Date(tracing.transformStatus.startedAt)).fromNow().toLocaleString();
-
-    return (<span style={cellStyles.active}>{`Transform started ${elapsed}`}<br/>{`${(100 * tracing.transformStatus.outputNodeCount/tracing.transformStatus.inputNodeCount).toFixed(2)}%`}</span>);
-}
-
-function formatSource(swcTracing: ISwcTracing) {
-    if (!swcTracing) {
-        return "(not found)";
-    }
-
-    return (
-        <span>
-            {swcTracing.filename}
-            <br/>
-            by {swcTracing.annotator}
-        </span>
-    );
-}
-
-function formatRegistrationTransform(registrationTransform: IRegistrationTransform) {
-    if (!registrationTransform) {
-        return "(not found)";
-    }
-
-    return (
-        <span>
-                {registrationTransform.name}
-            <br/>
-            {registrationTransform.location}
-            </span>
-    );
-}
-
-function formatTracingStructure(tracing: ITracing, cellStyle: any) {
-    if (!tracing.swcTracing || !tracing.swcTracing.tracingStructure) {
-        return (<td style={cellStyle}> {tracing.id.slice(0, 8)}</td>);
-    }
-
-    const structure = tracing.swcTracing.tracingStructure;
-
-    return (<td style={cellStyle}>{tracing.id.slice(0, 8)}<br/><img style={imageStyle} src={structure.value === 1 ? axonImage : dendriteImage}/><br/>{structure.name}</td>);
-}
-
-class TracingRow extends React.Component<ITracingRowProps, ITracingRowState> {
-
-    private handleClick(evt: any) {
-        this.props.onSelectedTracing(this.props.tracing);
-    }
-
-    public render() {
-        const cellStyle = cellStyles.normal;
-
-        return (<tr onClick={(evt)=>this.handleClick(evt)} style={this.props.isSelected ? rowStyles.selected : rowStyles.unselected}>
-                {formatTracingStructure(this.props.tracing, cellStyle)}
-                <td style={cellStyle}>{formatSource(this.props.tracing.swcTracing)}</td>
-                <td style={cellStyle}>{this.props.tracing.nodeCount}</td>
-                <td style={cellStyle}>{formatRegistrationTransform(this.props.tracing.registrationTransform)}</td>
-                <td style={cellStyle}>{formatUpdatedAt(this.props.tracing)}</td>
-                <td style={cellStyle}>{this.props.tracing.swcTracing ? formatNodeLocation(this.props.tracing.swcTracing.firstNode) : ""}</td>
-                <td style={cellStyle}>{formatNodeLocation(this.props.tracing.firstNode)}</td>
-            </tr>
-        );
-    }
-}
-
-const tracingsQuery = gql`{
-  tracings {
+const tracingsQuery = gql`query($tracingStructureId: String){
+  tracings(structureId: $tracingStructureId) {
     id
     nodeCount
     firstNode {
@@ -180,19 +65,29 @@ interface ITracingsGraphQLProps {
 
 interface ITracingsTableProps extends InjectedGraphQLProps<ITracingsGraphQLProps> {
     selectedTracing: ITracing;
+    tracingStructureFilterId: string;
     onSelectedTracing?(tracing: ITracing): void;
 }
 
 interface ITracingsTableState {
+    hasLoaded: boolean;
+    tracings: ITracing[];
 }
 
 @graphql(tracingsQuery, {
-    options: {
-        pollInterval: 5 * 1000
-    }
+    options: ({tracingStructureFilterId}) => ({
+        pollInterval: 5 * 1000,
+        variables: {tracingStructureId: tracingStructureFilterId}
+    })
 })
-export class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableState> {
-    private _timeout: Timer | number; // Typescript and browser can"t agree.
+class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableState> {
+    private _timeout: Timer | number; // Typescript and browser can't agree.
+
+    public constructor(props: ITracingsTableProps) {
+        super(props);
+
+        this.state = {hasLoaded: false, tracings: []};
+    }
 
     private refreshTimestamps() {
         this.forceUpdate();
@@ -207,10 +102,28 @@ export class TracingsTable extends React.Component<ITracingsTableProps, ITracing
         clearTimeout(this._timeout as Timer);
     }
 
-    public render() {
-        const tracings: ITracing[] = (this.props.data && !this.props.data.loading) ? this.props.data.tracings : [];
+    public componentWillReceiveProps(nextProps: ITracingsTableProps) {
+        // Cache current so that when going into anything but an instant query, existing rows in table don't drop during
+        // this data.loading phase.  Causes flicker as table goes from populated to empty back to populated.
+        if (this.props.data && !this.props.data.loading) {
+            this.setState({hasLoaded: true, tracings: this.props.data.tracings}, null);
+        }
+    }
 
-        const rows = tracings.map(tracing => (<TracingRow key={`tr_${tracing.id}`} tracing={tracing} onSelectedTracing={this.props.onSelectedTracing} isSelected={this.props.selectedTracing && tracing.id === this.props.selectedTracing.id}/>));
+    public render() {
+        let tracings: ITracing[] = [];
+
+        if (!this.props.data || this.props.data.loading) {
+            if (this.state.hasLoaded) {
+                tracings = this.state.tracings;
+            }
+        } else {
+            tracings = this.props.data.tracings;
+        }
+
+        const rows = tracings.map(tracing => (
+            <TracingRow key={`tr_${tracing.id}`} tracing={tracing} onSelectedTracing={this.props.onSelectedTracing}
+                        isSelected={this.props.selectedTracing && tracing.id === this.props.selectedTracing.id}/>));
 
         return (
             <Table condensed>
@@ -218,7 +131,12 @@ export class TracingsTable extends React.Component<ITracingsTableProps, ITracing
                 <tr>
                     <th colSpan={1} style={{backgroundColor: "#F5F5F5", borderRight: "1px solid #ddd"}}/>
                     <th colSpan={2}>Source</th>
-                    <th colSpan={2}>Transform</th>
+                    <th colSpan={2} style={{
+                        backgroundColor: "#FCFCFC",
+                        borderRight: "1px solid #ddd",
+                        borderLeft: "1px solid #ddd"
+                    }}>Transform
+                    </th>
                     <th colSpan={2}>First Node</th>
                 </tr>
                 <tr>
@@ -239,3 +157,110 @@ export class TracingsTable extends React.Component<ITracingsTableProps, ITracing
     }
 }
 
+const tracingStructuresQuery = gql`{
+    tracingStructures {
+        id
+        name
+        value
+    }
+}`;
+
+const TRACING_STRUCTURE_ANY: ITracingStructure = {
+    id: "",
+    name: "any",
+    value: -1
+};
+
+interface IFilterTracingsBarGraphQLProps {
+    tracingStructures: ITracingStructure[];
+}
+
+interface IFilterTracingsBarProps extends InjectedGraphQLProps<IFilterTracingsBarGraphQLProps> {
+    onTracingStructureFilter?(tracingStructureId: string): void;
+}
+
+interface IFilterTracingsBarState {
+    structureMenuTitle?: string;
+}
+
+@graphql(tracingStructuresQuery, {})
+export class FilterTracingsBar extends React.Component<IFilterTracingsBarProps, IFilterTracingsBarState> {
+    public constructor(props: IFilterTracingsBarProps) {
+        super(props);
+
+        this.state = {structureMenuTitle: TRACING_STRUCTURE_ANY.name};
+    }
+
+    private onStructureFilterSelect(evt: any) {
+        this.setState({structureMenuTitle: evt.name}, null);
+        this.props.onTracingStructureFilter(evt.id);
+    }
+
+    private renderToolbar(menuItems: JSX.Element[]) {
+        return (
+            <div style={{padding: "10px", borderBottom: "1px solid #ddd"}}>
+                <Form inline>
+                    <FormGroup controlId="formInlineName">
+                        <ControlLabel>Filter Tracing Structure:&nbsp;</ControlLabel>
+                        <InputGroup style={{minWidth: "100px"}}>
+                            <DropdownButton bsSize="small" componentClass={InputGroup.Button} id="input-dropdown-addon"
+                                            title={this.state.structureMenuTitle}
+                                            onSelect={(evt: any) => this.onStructureFilterSelect(evt)}>
+                                {menuItems}
+                            </DropdownButton>
+                        </InputGroup>
+                    </FormGroup>
+                </Form>
+            </div>
+        );
+    }
+
+    public render() {
+        let structures = [TRACING_STRUCTURE_ANY];
+
+        if (this.props.data.tracingStructures) {
+            structures = [...structures, ...this.props.data.tracingStructures];
+        }
+
+        const menuItems = structures.map(s => (<MenuItem
+            key={s.id + "_tracing_structure_key"} eventKey={s}>{s.name}</MenuItem>));
+
+        return this.renderToolbar(menuItems);
+    }
+}
+
+interface ITracingTableContainerProps {
+    selectedTracing: ITracing;
+    onSelectedTracing?(tracing: ITracing): void;
+}
+
+interface ITracingTableContainerState {
+    tracingStructureFilterId: string;
+}
+
+/*
+ Need a layer to manage offset, limit, and tracing that can pass to component with GraphQL query as props.
+ */
+export class TracingTableContainer extends React.Component<ITracingTableContainerProps, ITracingTableContainerState> {
+    constructor(props: ITracingTableContainerProps) {
+        super(props);
+
+        this.state = {tracingStructureFilterId: ""};
+    }
+
+    private onTracingStructureFilter(tracingStructureFilterId: string) {
+        this.setState({tracingStructureFilterId: tracingStructureFilterId}, null);
+        this.props.onSelectedTracing(null);
+    }
+
+    public render() {
+        return (
+            <div>
+                <FilterTracingsBar onTracingStructureFilter={(id: string) => this.onTracingStructureFilter(id)}/>
+                <TracingsTable onSelectedTracing={this.props.onSelectedTracing}
+                               selectedTracing={this.props.selectedTracing}
+                               tracingStructureFilterId={this.state.tracingStructureFilterId}/>
+            </div>
+        );
+    }
+}

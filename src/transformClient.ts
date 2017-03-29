@@ -16,6 +16,10 @@ const server = new WebpackDevServer(compiler, {
     proxy: {
         "/graphql": {
             target: apiUri
+        },
+        "/subscriptions/*": {
+            target: apiUri,
+            ws: true
         }
     },
     publicPath: webpackConfig.output.publicPath,

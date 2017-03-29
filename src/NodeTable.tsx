@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Table, Pagination} from "react-bootstrap";
+import {Table} from "react-bootstrap";
 import {InjectedGraphQLProps} from "react-apollo";
 
 import {ITracing} from "./models/tracing";
@@ -102,7 +102,8 @@ class NodeTable extends React.Component<ITracingNodeTableProps, ITracingNodeTabl
 
         return (
             <div>
-                <PaginationHeader pageCount={pageCount} activePage={activePage} onUpdateOffsetForPage={page => this.props.onUpdateOffsetForPage(page)}/>
+                <PaginationHeader pageCount={pageCount} activePage={activePage}
+                                  onUpdateOffsetForPage={page => this.props.onUpdateOffsetForPage(page)}/>
                 {nodePage != null ?
                     <Table condensed striped>
                         <thead>
@@ -132,7 +133,7 @@ interface INodeTableContainerState {
 }
 
 /*
-    Need a layer to manage offset, limit, and tracing that can pass to component with GraphQL query as props.
+ Need a layer to manage offset, limit, and tracing that can pass to component with GraphQL query as props.
  */
 export class NodeTableContainer extends React.Component<INodeTableContainerProps, INodeTableContainerState> {
     private _pageMap = new Map<string, number>();
@@ -165,9 +166,19 @@ export class NodeTableContainer extends React.Component<INodeTableContainerProps
         }
     }
 
-    public render() {
+    private getNodeTable() {
         return (
-            <NodeTable tracing={this.props.tracing} offset={this.state.offset} limit={this.state.limit} onUpdateOffsetForPage={page => this.onUpdateOffsetForPage(page)} onUpdateLimit={limit => this.onUpdateLimit(limit)}/>
+            <NodeTable tracing={this.props.tracing} offset={this.state.offset} limit={this.state.limit}
+                       onUpdateOffsetForPage={page => this.onUpdateOffsetForPage(page)}
+                       onUpdateLimit={limit => this.onUpdateLimit(limit)}/>
         );
+    }
+
+    private getTableInstructions() {
+        return (<div style={{padding: "10px"}}>Select a tracing above to display and filter nodes</div>)
+    }
+
+    public render() {
+        return this.props.tracing ? this.getNodeTable() : this.getTableInstructions();
     }
 }

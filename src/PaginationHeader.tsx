@@ -29,8 +29,6 @@ export class PaginationHeader extends React.Component<IPaginationHeaderProps, IP
         if (evt.charCode === 13) {
             const page = parseInt(this.state.pageTextValue);
 
-            console.log(page);
-
             if (!isNaN(page) && page > 0 && page <= this.props.pageCount) {
                 this.props.onUpdateOffsetForPage(page);
             }

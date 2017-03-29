@@ -1,7 +1,7 @@
 import * as React from "react";
 import {Panel} from "react-bootstrap";
 
-import {TracingsTable} from "./TracingsTable";
+import {TracingTableContainer} from "./TracingsTable";
 import {ITracing} from "./models/tracing";
 import {NodeTableContainer} from "./NodeTable";
 
@@ -28,7 +28,7 @@ export class Tracings extends React.Component<ITracingsProps, ITracingsState> {
         return (
             <div>
                 <Panel header="Tracings" footer="Click a tracing to view nodes">
-                    <TracingsTable onSelectedTracing={(tracing => this.onSelectTracing(tracing))}
+                    <TracingTableContainer onSelectedTracing={(tracing => this.onSelectTracing(tracing))}
                                    selectedTracing={this.state.selectedTracing}/>
                 </Panel>
                 <Panel header="Transformed Nodes">

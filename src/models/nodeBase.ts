@@ -12,9 +12,9 @@ export interface INodeBase {
 
 export function formatNodeLocation(node: INodeBase) {
     if (node) {
-        const x = node.x ? node.x.toFixed(6) : "n/a";
-        const y = node.y ? node.y.toFixed(6) : "n/a";
-        const z = node.z ? node.z.toFixed(6) : "n/a";
+        const x = node.x ? node.x.toFixed(4) : "n/a";
+        const y = node.y ? node.y.toFixed(4) : "n/a";
+        const z = node.z ? node.z.toFixed(4) : "n/a";
         return `(${x}, ${y}, ${z})`;
     } else {
         return "(n/a)";
