@@ -51,7 +51,9 @@ interface ITracingRowState {
 function formatUpdatedAt(tracing: ITracing, reapplyFcn: any) {
     if (!tracing.transformStatus) {
         if (!tracing.transformedAt) {
-            return "Never";
+            return (<div><span>Never</span><br/><br/><a
+                onClick={(evt) => reapplyFcn(evt, tracing.id)}><Glyphicon glyph="refresh"/>&nbsp;reapply</a>
+            </div>);
         }
         return (<div><span>{moment(new Date(tracing.transformedAt)).fromNow().toLocaleString()}</span><br/><br/><a
             onClick={(evt) => reapplyFcn(evt, tracing.id)}><Glyphicon glyph="refresh"/>&nbsp;reapply</a>
