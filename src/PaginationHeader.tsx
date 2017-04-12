@@ -43,7 +43,7 @@ export class PaginationHeader extends React.Component<IPaginationHeaderProps, IP
 
     private renderGrid() {
         return (
-            <Grid>
+            <Grid fluid>
                 <Row>
                     <Col sm={8}>
                         <Pagination prev next first last ellipsis boundaryLinks items={this.props.pageCount}

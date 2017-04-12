@@ -3,39 +3,20 @@ import {Table, Form, FormGroup, ControlLabel, DropdownButton, InputGroup, MenuIt
 import {graphql, InjectedGraphQLProps} from "react-apollo";
 import gql from "graphql-tag";
 
-import {ITracing} from "./models/tracing";
+import {ITracing, ITracingPage} from "./models/tracing";
 import Timer = NodeJS.Timer;
 import {TracingRow} from "./TracingRow";
 import {ITracingStructure} from "./models/tracingStructure";
 
-const tracingsQuery = gql`query($tracingStructureId: String){
-  tracings(structureId: $tracingStructureId) {
-    id
-    nodeCount
-    firstNode {
-      sampleNumber
-      parentNumber
+const tracingsQuery = gql`query ($queryInput: TracingsQueryInput) {
+  tracings(queryInput: $queryInput) {
+    offset
+    limit
+    totalCount
+    matchCount
+    tracings {
       id
-      x
-      y
-      z
-    }
-    transformStatus {
-      startedAt
-      inputNodeCount
-      outputNodeCount
-    }
-    transformedAt
-    createdAt
-    updatedAt
-    swcTracing {
-      id
-      annotator
-      filename
-      fileComments
-      offsetX
-      offsetY
-      offsetZ
+      nodeCount
       firstNode {
         sampleNumber
         parentNumber
@@ -43,24 +24,49 @@ const tracingsQuery = gql`query($tracingStructureId: String){
         x
         y
         z
-      },
-      tracingStructure {
+      }
+      transformStatus {
+        startedAt
+        inputNodeCount
+        outputNodeCount
+      }
+      transformedAt
+      createdAt
+      updatedAt
+      swcTracing {
+        id
+        annotator
+        filename
+        fileComments
+        offsetX
+        offsetY
+        offsetZ
+        firstNode {
+          sampleNumber
+          parentNumber
+          id
+          x
+          y
+          z
+        }
+        tracingStructure {
+          id
+          name
+          value
+        }
+      }
+      registrationTransform {
         id
         name
-        value
+        notes
+        location
       }
-    }
-    registrationTransform {
-      id
-      name
-      notes
-      location
     }
   }
 }`;
 
 interface ITracingsGraphQLProps {
-    tracings: ITracing[];
+    tracings: ITracingPage;
 }
 
 interface ITracingsTableProps extends InjectedGraphQLProps<ITracingsGraphQLProps> {
@@ -77,7 +83,7 @@ interface ITracingsTableState {
 @graphql(tracingsQuery, {
     options: ({tracingStructureFilterId}) => ({
         pollInterval: 5 * 1000,
-        variables: {tracingStructureId: tracingStructureFilterId}
+        variables: {queryInput: {tracingStructureId: tracingStructureFilterId}}
     })
 })
 class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableState> {
@@ -106,7 +112,7 @@ class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableS
         // Cache current so that when going into anything but an instant query, existing rows in table don't drop during
         // this data.loading phase.  Causes flicker as table goes from populated to empty back to populated.
         if (this.props.data && !this.props.data.loading) {
-            this.setState({hasLoaded: true, tracings: this.props.data.tracings}, null);
+            this.setState({hasLoaded: true, tracings: this.props.data.tracings.tracings}, null);
         }
     }
 
@@ -118,7 +124,7 @@ class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableS
                 tracings = this.state.tracings;
             }
         } else {
-            tracings = this.props.data.tracings;
+            tracings = this.props.data.tracings.tracings;
         }
 
         const rows = tracings.map(tracing => (

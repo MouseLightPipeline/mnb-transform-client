@@ -19,3 +19,10 @@ export interface ITracing {
     createdAt: number;
     updatedAt: number;
 }
+export interface ITracingPage {
+    offset: number;
+    limit: number;
+    totalCount: number;
+    matchCount: number;
+    tracings: ITracing[];
+}

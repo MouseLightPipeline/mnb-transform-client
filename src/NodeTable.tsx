@@ -4,7 +4,7 @@ import {InjectedGraphQLProps} from "react-apollo";
 
 import {ITracing} from "./models/tracing";
 import {ITracingNode, INodePage} from "./models/tracingNode";
-import gql from "graphql-tag/index";
+import gql from "graphql-tag";
 import {graphql} from "react-apollo";
 import {formatNodeLocation} from "./models/nodeBase";
 import {PaginationHeader} from "./PaginationHeader";

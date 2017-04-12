@@ -235,8 +235,6 @@ class UntransformedSwcTable extends React.Component<IUntransformedTableProps, IU
                     document: untransformedSubscription,
                     updateQuery: (previous, {subscriptionData}) => {
                         const modifiedResult: any = cloneDeep(previous);
-                        console.log(modifiedResult);
-                        console.log(subscriptionData);
                         modifiedResult.untransformedSwc = modifiedResult.untransformedSwc.filter((u: ISwcTracing) => u.id !== subscriptionData.data.transformApplied.id);
                         return modifiedResult;
                     },

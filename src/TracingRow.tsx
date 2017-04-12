@@ -26,7 +26,7 @@ const cellStyles = {
         verticalAlign: "middle"
     },
     active: {
-        fontWeight: 800,
+        "font-weight": 800,
         fontSize: "14px"
     }
 };
