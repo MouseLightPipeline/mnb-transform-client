@@ -5,11 +5,12 @@
   "repository": "https://github.com/MouseLightDataBrowser/transform-client.git",
   "author": "Patrick Edson <pedson@leapscientific.com>",
   "license": "Janelia",
+  "dockerRepository": "mouselightdatabrowser",
   "scripts": {
-    "debug": "DEBUG=ndb* node --trace-warnings $NODE_DEBUG_OPTION src/transformClient.js",
-    "start": "node src/ctransformClient.js",
-    "docker-build": "docker build --tag mouselightdatabrowser/transform-client .",
-    "docker-push": "docker push mouselightdatabrowser/transform-client"
+    "debug": "DEBUG=ndb* node $NODE_DEBUG_OPTION --trace-warnings src/transformClient.js",
+    "start": "DEBUG=ndb* node src/ctransformClient.js",
+    "docker-build": "gulp docker-build",
+    "release": "gulp release"
   },
   "dependencies": {
     "apollo-client": "^1.0.0-rc.6",
@@ -26,6 +27,9 @@
     "subscriptions-transport-ws": "^0.5.5-alpha.0"
   },
   "devDependencies": {
+    "@types/gulp": "^4.0.3",
+    "@types/gulp-shell": "^0.0.30",
+    "@types/isomorphic-fetch": "^0.0.34",
     "@types/react": "^15.0.21",
     "@types/react-bootstrap": "0.0.33",
     "@types/react-dom": "^0.14.17",
@@ -34,6 +38,8 @@
     "@types/webpack-dev-server": "^1.12.6",
     "css-loader": "^0.27.3",
     "file-loader": "^0.10.1",
+    "gulp": "^3.9.1",
+    "gulp-shell": "^0.6.3",
     "style-loader": "^0.16.0",
     "ts-loader": "^2.0.3",
     "typescript": "^2.2.2",
