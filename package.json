@@ -1,6 +1,6 @@
 {
   "name": "transform-client",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "main": "src/transformClient.js",
   "repository": "https://github.com/MouseLightDataBrowser/transform-client.git",
   "author": "Patrick Edson <pedson@leapscientific.com>",

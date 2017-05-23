@@ -29,7 +29,7 @@ interface INodeRowState {
 class NodeRow extends React.Component<INodeRowProps, INodeRowState> {
     public render() {
         return (<tr>
-                <td style={cellStyles.normal}>{this.props.node.swcNode.structureIdentifier.name}</td>
+                <td style={cellStyles.normal}>{this.props.node.swcNode.structureIdentifier ? this.props.node.swcNode.structureIdentifier.name : ""}</td>
                 <td style={cellStyles.normal}>{this.props.node.brainArea ? this.props.node.brainArea.name : "(none)"}</td>
                 <td style={cellStyles.normal}>{formatNodeLocation(this.props.node)}</td>
                 <td style={cellStyles.normal}>{this.props.node.sampleNumber} | {this.props.node.parentNumber}</td>
