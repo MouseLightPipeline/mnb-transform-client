@@ -14,7 +14,8 @@ module.exports = {
                 target: `http://localhost:9661`,
                 ws: true
             }
-        }
+        },
+        disableHostCheck: true
     },
     output: {
         filename: 'bundle.js',
