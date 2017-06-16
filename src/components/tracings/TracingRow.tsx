@@ -5,13 +5,13 @@ import gql from "graphql-tag";
 import moment = require("moment");
 import { toast } from 'react-toastify';
 
-import {formatNodeLocation} from "./models/nodeBase";
-import {IRegistrationTransform} from "./models/registrationTransform";
-import {ISwcTracing} from "./models/swcTracing";
-import {ITracing} from "./models/tracing";
+import {formatNodeLocation} from "../../models/nodeBase";
+import {IRegistrationTransform} from "../../models/registrationTransform";
+import {ISwcTracing} from "../../models/swcTracing";
+import {ITracing} from "../../models/tracing";
 
-const dendriteImage = require("file-loader!../public/dendrite.png");
-const axonImage = require("file-loader!../public/axon.png");
+const dendriteImage = require("file-loader!../../../public/dendrite.png");
+const axonImage = require("file-loader!../../../public/axon.png");
 
 const rowStyles = {
     selected: {
@@ -22,7 +22,7 @@ const rowStyles = {
 
 const cellStyles = {
     normal: {
-        textAlign: "center",
+        textAlign: "left",
         verticalAlign: "middle"
     },
     active: {

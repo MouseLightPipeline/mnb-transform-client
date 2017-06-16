@@ -1,8 +1,5 @@
 import * as React from "react";
-import {ApolloProvider, InjectedGraphQLProps} from "react-apollo";
-import ApolloClient from "apollo-client";
-import {createNetworkInterface} from "apollo-client";
-import {addGraphQLSubscriptions, SubscriptionClient} from 'subscriptions-transport-ws';
+import {InjectedGraphQLProps} from "react-apollo";
 import {Navbar, Nav, Glyphicon, Badge, NavItem, Modal, Button} from "react-bootstrap"
 import {Link} from "react-router";
 import {ToastContainer} from 'react-toastify';
@@ -10,41 +7,13 @@ import 'react-toastify/dist/ReactToastify.min.css';
 
 import {Content} from "./Content";
 import graphql from "react-apollo/lib/graphql";
-import {SystemMessageQuery} from "./graphql/systemMessage";
+import {SystemMessageQuery} from "../graphql/systemMessage";
 
-declare let window: { __APOLLO_STATE__: any, location: any };
-
-const networkInterface = createNetworkInterface({
-    uri: "/graphql"
-});
-
-const uri = window.location.href.replace("http://", "ws://");
-
-const wsClient = new SubscriptionClient(`${uri}subscriptions`, {
-    reconnect: true
-});
-
-const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
-    networkInterface,
-    wsClient,
-);
-
-const client = new ApolloClient({
-    networkInterface: networkInterfaceWithSubscriptions,
-    addTypename: true,
-    dataIdFromObject: (result: any) => {
-        if (result.id) {
-            return result.__typename + result.id;
-        }
-        return null;
-    },
-    initialState: window.__APOLLO_STATE__,
-    connectToDevTools: true
-});
+const logoImage = require("file-loader!../../public/mouseLight_logo_web_white.png");
 
 const styles = {
     content: {
-        marginTop: "55px",
+        marginTop: "50px",
         marginBottom: "50px"
     }
 };
@@ -71,12 +40,16 @@ interface ISystemMessageQuery {
 })
 class Heading extends React.Component<IHeadingProps, IHeadingState> {
     public render() {
+        if (this.props.data && this.props.data.error) {
+            console.log(this.props.data.error);
+        }
+
         return (
             <Navbar fluid fixedTop style={{marginBottom: 0}}>
                 <Navbar.Header>
                     <Navbar.Brand>
                         <Link to="/">
-                            Mouse Light
+                            <img src={logoImage}/>
                         </Link>
                     </Navbar.Brand>
                 </Navbar.Header>
@@ -124,7 +97,6 @@ export class App extends React.Component<IAppProps, IAppState> {
 
     public render() {
         return (
-            <ApolloProvider client={client}>
                 <div>
                     <ToastContainer autoClose={3000} position="bottom-center" style={toastStyleOverride}/>
                     <SettingsDialog show={this.state.isSettingsOpen}
@@ -135,7 +107,6 @@ export class App extends React.Component<IAppProps, IAppState> {
                     </div>
                     <Footer/>
                 </div>
-            </ApolloProvider>
         );
     }
 }

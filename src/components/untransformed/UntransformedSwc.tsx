@@ -1,12 +1,13 @@
 import * as React from "react";
-import {Panel, Table, Button} from "react-bootstrap";
+import {Table, Button} from "react-bootstrap";
 import {graphql, InjectedGraphQLProps} from "react-apollo";
 import gql from "graphql-tag";
 import {toast} from "react-toastify";
 import {cloneDeep} from "lodash"
 
-import {ISwcTracing} from "./models/swcTracing";
-import {ITracing} from "./models/tracing";
+import {ISwcTracing} from "../../models/swcTracing";
+import {ITracing} from "../../models/tracing";
+import {GraphQLDataProps} from "react-apollo/lib/graphql";
 
 const cellStyles = {
     normal: {
@@ -162,32 +163,6 @@ class UntransformedRow extends React.Component<IUntransformedRowProps, IUntransf
     }
 }
 
-const untransformedQuery = gql`{
-    untransformedSwc {
-      id
-      annotator
-      filename
-      fileComments
-      offsetX
-      offsetY
-      offsetZ
-      nodeCount
-      firstNode {
-        sampleNumber
-        parentNumber
-        id
-        x
-        y
-        z
-      },
-      tracingStructure {
-        id
-        name
-        value
-      }
-    }
-}`;
-
 
 const untransformedSubscription = gql`subscription onUntransformedSwc {
     transformApplied {
@@ -199,7 +174,8 @@ interface IUntransformedGraphQLProps {
     untransformedSwc: ISwcTracing[];
 }
 
-interface IUntransformedTableProps extends InjectedGraphQLProps<IUntransformedGraphQLProps> {
+interface IUntransformedTableProps {
+    data: GraphQLDataProps & IUntransformedGraphQLProps;
 }
 
 interface IUntransformedTableState {
@@ -207,12 +183,7 @@ interface IUntransformedTableState {
     tracings: ISwcTracing[];
 }
 
-@graphql(untransformedQuery, {
-    options: {
-        pollInterval: 1 * 60 * 1000,
-    }
-})
-class UntransformedSwcTable extends React.Component<IUntransformedTableProps, IUntransformedTableState> {
+export class UntransformedSwcTable extends React.Component<IUntransformedTableProps, IUntransformedTableState> {
     private _subscription: any = null;
 
     public constructor(props: IUntransformedTableProps) {
@@ -253,6 +224,8 @@ class UntransformedSwcTable extends React.Component<IUntransformedTableProps, IU
             if (this.state.hasLoaded) {
                 tracings = this.state.tracings;
             }
+        } else if (this.props.data.error) {
+            console.log(this.props.data.error);
         } else {
             tracings = this.props.data.untransformedSwc;
         }
@@ -273,28 +246,6 @@ class UntransformedSwcTable extends React.Component<IUntransformedTableProps, IU
                 {rows}
                 </tbody>
             </Table>
-        );
-    }
-}
-
-interface IUntransformedSwcProps {
-}
-
-interface IUntransformedSwcState {
-}
-
-export class UntransformedSwc extends React.Component<IUntransformedSwcProps, IUntransformedSwcState> {
-    constructor(props: IUntransformedSwcProps) {
-        super(props);
-    }
-
-    public render() {
-        return (
-            <div>
-                <Panel header="Untransformed SWC Files">
-                    <UntransformedSwcTable/>
-                </Panel>
-            </div>
         );
     }
 }
