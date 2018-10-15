@@ -1,16 +1,16 @@
 {
-  "name": "transform-client",
+  "name": "mnb-transform-client",
   "version": "1.0.9",
-  "main": "src/transformClient.js",
-  "repository": "https://github.com/MouseLightDataBrowser/transform-client.git",
+  "main": "dist/app.js",
+  "repository": "https://github.com/MouseLighPipeline/mnb-transform-client.git",
   "author": "Patrick Edson <pedson@leapscientific.com>",
-  "license": "Janelia",
+  "license": "SEE LICENSE IN LICENSE",
   "dockerRepository": "mouselightdatabrowser",
+  "dockerImageName": "transform-client",
   "scripts": {
-    "debug": "DEBUG=ndb* node $NODE_DEBUG_OPTION --trace-warnings src/transformClient.js",
-    "start": "DEBUG=ndb* node src/ctransformClient.js",
+    "debug": "DEBUG=ndb* node $NODE_DEBUG_OPTION --trace-warnings src/app.js",
     "docker-build": "gulp docker-build",
-    "release": "gulp release"
+    "docker-release": "gulp release"
   },
   "dependencies": {
     "@types/rc-slider": "^6.1.2",
