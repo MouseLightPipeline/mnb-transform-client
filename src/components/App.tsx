@@ -3,7 +3,6 @@ import {InjectedGraphQLProps} from "react-apollo";
 import {Navbar, Nav, Glyphicon, Badge, NavItem, Modal, Button} from "react-bootstrap"
 import {Link} from "react-router";
 import {ToastContainer} from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.min.css';
 
 import {Content} from "./Content";
 import graphql from "react-apollo/lib/graphql";

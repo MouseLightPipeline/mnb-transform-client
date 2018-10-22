@@ -1,3 +1,5 @@
+import {ServiceOptions} from "./serviceOptions";
+
 const Webpack = require("webpack");
 const passport = require("passport");
 const DigestStrategy = require("passport-http").DigestStrategy;
@@ -5,10 +7,8 @@ const DigestStrategy = require("passport-http").DigestStrategy;
 const WebpackDevServer = require("webpack-dev-server");
 const webpackConfig = require("../webpack.config.js");
 
-const serverConfig = require("./serverConfig").default();
-
-const localUri = `http://localhost:${serverConfig.port}`;
-const apiUri = `http://${serverConfig.graphQlHostname}:${serverConfig.graphQlPort}`;
+const localUri = `http://localhost:${ServiceOptions.port}`;
+const apiUri = `http://${ServiceOptions.graphQLHostname}:${ServiceOptions.graphQLPort}`;
 
 const compiler = Webpack(webpackConfig);
 const server = new WebpackDevServer(compiler, {
@@ -18,11 +18,11 @@ const server = new WebpackDevServer(compiler, {
     proxy: {
         "/graphql": {
             target: apiUri
-        },
+        }/*,
         "/subscriptions/*": {
             target: apiUri,
             ws: true
-        }
+        }*/
     },
     setup: (app: any) => {
         app.use(passport.initialize());
@@ -48,7 +48,7 @@ passport.use(new DigestStrategy({qop: 'auth'},
         }
     },
     function (params: any, done: any) {
-        // validate nonces as necessary
+        // validate nonce as necessary
         done(null, true)
     }
 ));
@@ -61,7 +61,7 @@ passport.deserializeUser(function (id: any, done: any) {
     done(null, {id: 1, name: "mouselight"});
 });
 
-server.listen(serverConfig.port, "0.0.0.0", () => {
+server.listen(ServiceOptions.port, "0.0.0.0", () => {
     console.log(`Listening at ${localUri}/`);
     console.log(`\t with graphql proxy to ${apiUri}`)
 });

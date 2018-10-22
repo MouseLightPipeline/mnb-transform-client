@@ -4,6 +4,8 @@ import {Router, Route, browserHistory} from "react-router";
 
 import {ApolloApp} from "./components/ApolloApp";
 
+import 'react-toastify/dist/ReactToastify.min.css';
+
 // TODO remove after replacing slider
 import "rc-slider/assets/index.css";
 

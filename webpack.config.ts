@@ -1,4 +1,5 @@
 const path = require("path");
+
 module.exports = {
     entry: [
         `webpack-dev-server/client?http://localhost:9663/`,
@@ -24,8 +25,8 @@ module.exports = {
                 loader: 'ts-loader',
                 exclude: /node_modules/
             },
-            { test: /\.css$/, use: 'style-loader' },
-            { test: /\.css$/, use: 'css-loader' }
+            {test: /\.css$/, use: 'style-loader'},
+            {test: /\.css$/, use: 'css-loader'}
         ]
     },
     resolve: {
@@ -33,4 +34,3 @@ module.exports = {
     },
     devtool: 'inline-source-map',
 };
-//# sourceMappingURL=webpack.config.js.map
