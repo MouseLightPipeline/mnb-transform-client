@@ -53,7 +53,7 @@ var columns = [{
     }];
 /*
  class TracingRow extends React.Component<ITracingRowProps, ITracingRowState> {
- public render() {
+ assets render() {
  const updatedAt = moment(new Date(this.props.tracing.updatedAt)).fromNow();
 
  return (<tr>

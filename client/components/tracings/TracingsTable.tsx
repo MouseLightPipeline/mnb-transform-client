@@ -269,9 +269,6 @@ export class TracingTableContainer extends React.Component<ITracingTableContaine
             }
         });
 
-        console.log(tracingStructureOptions);
-        console.log(this.props.tracingStructureFilterId);
-
         const tracingsPage = (this.props.data && !this.props.data.loading && !this.props.data.error) ? this.props.data.tracings : null;
 
         const totalCount = tracingsPage ? tracingsPage.matchCount : 0;

@@ -8,7 +8,7 @@ import {Content} from "./Content";
 import graphql from "react-apollo/lib/graphql";
 import {SystemMessageQuery} from "../graphql/systemMessage";
 
-const logoImage = require("file-loader!../../public/mouseLight_logo_web_white.png");
+const logoImage = require("file-loader!../../assets/mouseLight_logo_web_white.png");
 
 const styles = {
     content: {

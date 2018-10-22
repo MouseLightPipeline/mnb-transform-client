@@ -10,8 +10,8 @@ import {IRegistrationTransform} from "../../models/registrationTransform";
 import {ISwcTracing} from "../../models/swcTracing";
 import {ITracing} from "../../models/tracing";
 
-const dendriteImage = require("file-loader!../../../public/dendrite.png");
-const axonImage = require("file-loader!../../../public/axon.png");
+const dendriteImage = require("file-loader!../../../assets/dendrite.png");
+const axonImage = require("file-loader!../../../assets/axon.png");
 
 const rowStyles = {
     selected: {
