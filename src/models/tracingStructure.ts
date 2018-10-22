@@ -3,8 +3,10 @@ export enum TracingStructure {
     dendrite = 2
 }
 
+export const AnyTracingStructureId = "ANY";
+
 export const AnyTracingStructure: ITracingStructure = {
-    id: "",
+    id: AnyTracingStructureId,
     name: "any",
     value: -1
 };

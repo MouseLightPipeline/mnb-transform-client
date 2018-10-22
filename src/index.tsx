@@ -4,6 +4,9 @@ import {Router, Route, browserHistory} from "react-router";
 
 import {ApolloApp} from "./components/ApolloApp";
 
+// TODO remove after replacing slider
+import "rc-slider/assets/index.css";
+
 const rootEl = document.getElementById("root");
 
 ReactDOM.render(

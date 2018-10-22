@@ -1,5 +1,6 @@
 import * as React from "react";
 import {Panel, Table, Alert, ControlLabel, Grid, Row, Col} from "react-bootstrap";
+import {Dropdown, DropdownItemProps} from "semantic-ui-react";
 import {graphql, InjectedGraphQLProps} from "react-apollo";
 import gql from "graphql-tag";
 
@@ -7,9 +8,13 @@ import {ITracing, ITracingPage} from "../../models/tracing";
 import Timer = NodeJS.Timer;
 import {TracingRow} from "./TracingRow";
 import {GraphQLDataProps} from "react-apollo/lib/graphql";
-import {PaginationHeader} from "ndb-react-components";
-import {TracingStructureSelect} from "../editors/TracingStructureSelect";
-import {AnyTracingStructure, ITracingStructure} from "../../models/tracingStructure";
+import {
+    AnyTracingStructure,
+    AnyTracingStructureId,
+    displayTracingStructure,
+    ITracingStructure
+} from "../../models/tracingStructure";
+import {PaginationHeader} from "../editors/PaginationHeader";
 
 const tracingsQuery = gql`query ($queryInput: TracingsQueryInput) {
   tracings(queryInput: $queryInput) {
@@ -171,13 +176,13 @@ interface ITracingTableContainerProps extends InjectedGraphQLProps<ITracingsGrap
     selectedTracing: ITracing;
     offset: number;
     limit: number;
-    tracingStructureFilter?: ITracingStructure;
+    tracingStructureFilterId?: string;
     tracingStructuresQuery?: ITracingStructuresQueryProps & GraphQLDataProps;
 
     onUpdateOffsetForPage(page: number): void;
     onUpdateLimit(limit: number): void;
-    onSelectedTracing?(tracing: ITracing): void;
-    onTracingStructureFilter(structure: ITracingStructure): void;
+    onSelectedTracing?(tracingId: ITracing): void;
+    onTracingStructureFilter(structureId: string): void;
 }
 
 interface ITracingTableContainerState {
@@ -192,9 +197,9 @@ const TracingStructuresQuery = gql`query {
 }`;
 
 @graphql(tracingsQuery, {
-    options: ({offset, limit, tracingStructureFilter}) => ({
+    options: ({offset, limit, tracingStructureFilterId}) => ({
         pollInterval: 5 * 1000,
-        variables: {queryInput: {offset, limit, tracingStructureId: tracingStructureFilter.id}}
+        variables: {queryInput: {offset, limit, tracingStructureId: tracingStructureFilterId == AnyTracingStructureId ? "" : tracingStructureFilterId}}
     })
 })
 @graphql(TracingStructuresQuery, {
@@ -255,6 +260,18 @@ export class TracingTableContainer extends React.Component<ITracingTableContaine
 
         tracingStructures.unshift(AnyTracingStructure);
 
+
+        const tracingStructureOptions: DropdownItemProps[] = tracingStructures.map(t => {
+            return {
+                key: t.id,
+                text: displayTracingStructure(t),
+                value: t.id
+            }
+        });
+
+        console.log(tracingStructureOptions);
+        console.log(this.props.tracingStructureFilterId);
+
         const tracingsPage = (this.props.data && !this.props.data.loading && !this.props.data.error) ? this.props.data.tracings : null;
 
         const totalCount = tracingsPage ? tracingsPage.matchCount : 0;
@@ -277,13 +294,17 @@ export class TracingTableContainer extends React.Component<ITracingTableContaine
                         <Row style={{margin: "0px"}}>
                             <Col md={2}>
                                 <ControlLabel>Tracing Structure:&nbsp;</ControlLabel>
+                                {/*
                                 <TracingStructureSelect idName="createTracingStructureSelect"
                                                         clearable={false}
                                                         options={tracingStructures}
                                                         selectedOption={this.props.tracingStructureFilter}
                                                         onSelect={t => {
                                                             this.props.onTracingStructureFilter(t)
-                                                        }}/>
+                                                        }}/>*/}
+                                <Dropdown placeholder={"Select the structure..."} fluid selection options={tracingStructureOptions}
+                                          value={this.props.tracingStructureFilterId}
+                                          onChange={(e, {value}) => this.props.onTracingStructureFilter(value as string)}/>
                             </Col>
                         </Row>
                     </Grid>
@@ -292,7 +313,7 @@ export class TracingTableContainer extends React.Component<ITracingTableContaine
                 <TracingsTable data={this.props.data}
                                onSelectedTracing={this.props.onSelectedTracing}
                                selectedTracing={this.props.selectedTracing}
-                               tracingStructureFilterId={this.props.tracingStructureFilter.id}/>
+                               tracingStructureFilterId={this.props.tracingStructureFilterId}/>
             </Panel>
         );
     }

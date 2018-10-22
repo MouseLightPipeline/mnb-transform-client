@@ -7,7 +7,7 @@ import {ITracingNode, INodePage} from "../../models/tracingNode";
 import gql from "graphql-tag";
 import {graphql} from "react-apollo";
 import {formatNodeLocation} from "../../models/nodeBase";
-import {PaginationHeader} from "ndb-react-components";
+import {PaginationHeader} from "../editors/PaginationHeader";
 
 const cellStyles = {
     normal: {
@@ -109,8 +109,8 @@ class NodeTable extends React.Component<ITracingNodeTableProps, ITracingNodeTabl
                 <PaginationHeader pageCount={pageCount}
                                   activePage={activePage}
                                   limit={this.props.limit}
-                                  onUpdateLimitForPage={limit => this.props.onUpdateLimit(limit)}
-                                  onUpdateOffsetForPage={page => this.props.onUpdateOffsetForPage(page)}/>
+                                  onUpdateLimitForPage={(limit: number) => this.props.onUpdateLimit(limit)}
+                                  onUpdateOffsetForPage={(page: number) => this.props.onUpdateOffsetForPage(page)}/>
                 {nodePage != null ?
                     <Table condensed striped>
                         <thead>

@@ -1,10 +1,10 @@
 import * as React from "react";
-import {Grid, Row, Col, Panel} from "react-bootstrap";
+import {Grid, Row, Col} from "react-bootstrap";
 
 import {TracingTableContainer} from "./TracingsTable";
 import {ITracing} from "../../models/tracing";
 import {NodeTableContainer} from "./NodeTable";
-import {AnyTracingStructure, ITracingStructure} from "../../models/tracingStructure";
+import {AnyTracingStructure} from "../../models/tracingStructure";
 
 interface ITracingsProps {
 }
@@ -14,7 +14,7 @@ interface ITracingsState {
     limit?: number;
 
     selectedTracing?: ITracing;
-    tracingStructureFilter?: ITracingStructure;
+    tracingStructureFilterId?: string;
 }
 
 export class Tracings extends React.Component<ITracingsProps, ITracingsState> {
@@ -24,7 +24,7 @@ export class Tracings extends React.Component<ITracingsProps, ITracingsState> {
             offset: 0,
             limit: 10,
             selectedTracing: null,
-            tracingStructureFilter: AnyTracingStructure
+            tracingStructureFilterId: AnyTracingStructure.id
         }
     }
 
@@ -33,16 +33,16 @@ export class Tracings extends React.Component<ITracingsProps, ITracingsState> {
     }
 
     private onUpdateLimit(limit: number) {
-        this.setState({limit: limit}, null);
+        this.setState({limit: limit});
     }
 
 
     private onSelectTracing(tracing: ITracing) {
-        this.setState({selectedTracing: tracing}, null);
+        this.setState({selectedTracing: tracing});
     }
 
-    private onTracingStructureFilter(tracingStructureFilter: ITracingStructure) {
-        this.setState({tracingStructureFilter, selectedTracing: null});
+    private onTracingStructureFilter(tracingStructureFilterId: string) {
+        this.setState({tracingStructureFilterId, selectedTracing: null});
     }
 
     private renderSection(content: any) {
@@ -62,10 +62,10 @@ export class Tracings extends React.Component<ITracingsProps, ITracingsState> {
             <TracingTableContainer offset={this.state.offset}
                                    limit={this.state.limit}
                                    selectedTracing={this.state.selectedTracing}
-                                   tracingStructureFilter={this.state.tracingStructureFilter}
+                                   tracingStructureFilterId={this.state.tracingStructureFilterId}
                                    onUpdateOffsetForPage={page => this.onUpdateOffsetForPage(page)}
                                    onUpdateLimit={limit => this.onUpdateLimit(limit)}
-                                   onTracingStructureFilter={id => this.onTracingStructureFilter(id)}
+                                   onTracingStructureFilter={(id: string) => this.onTracingStructureFilter(id)}
                                    onSelectedTracing={(tracing => this.onSelectTracing(tracing))}/>
         );
     }
