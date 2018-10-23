@@ -1,14 +1,14 @@
 import * as React from "react";
-import { Glyphicon} from "react-bootstrap";
-import {graphql, InjectedGraphQLProps} from "react-apollo";
-import gql from "graphql-tag";
+import {Glyphicon} from "react-bootstrap";
 import moment = require("moment");
-import { toast } from 'react-toastify';
+import {toast} from 'react-toastify';
 
 import {formatNodeLocation} from "../../models/nodeBase";
 import {IRegistrationTransform} from "../../models/registrationTransform";
 import {ISwcTracing} from "../../models/swcTracing";
 import {ITracing} from "../../models/tracing";
+import {TextAlignProperty} from "csstype";
+import {REAPPLY_TRANSFORM_MUTATION, ReapplyTransformMutation} from "../../graphql/swcTracings";
 
 const dendriteImage = require("file-loader!../../../assets/dendrite.png");
 const axonImage = require("file-loader!../../../assets/axon.png");
@@ -22,7 +22,7 @@ const rowStyles = {
 
 const cellStyles = {
     normal: {
-        textAlign: "left",
+        textAlign: "left" as TextAlignProperty,
         verticalAlign: "middle"
     },
     active: {
@@ -35,39 +35,10 @@ const imageStyle = {
     maxHeight: "60px"
 };
 
-interface ITracingsRowGraphQLProps {
-}
-
-interface ITracingRowProps extends InjectedGraphQLProps<ITracingsRowGraphQLProps> {
-    isSelected: boolean;
-    tracing: ITracing;
-    onSelectedTracing?(tracing: ITracing): void;
-    reapplyTransformMutation?(id: string): Promise<ITracing>;
-}
-
-interface ITracingRowState {
-}
-
-function formatUpdatedAt(tracing: ITracing, reapplyFcn: any) {
-    if (!tracing.transformStatus) {
-        if (!tracing.transformedAt) {
-            return (<div><span>Never</span><br/><br/><a
-                onClick={(evt) => reapplyFcn(evt, tracing.id)}><Glyphicon glyph="refresh"/>&nbsp;reapply</a>
-            </div>);
-        }
-        return (<div><span>{moment(new Date(tracing.transformedAt)).fromNow().toLocaleString()}</span><br/><br/><a
-            onClick={(evt) => reapplyFcn(evt, tracing.id)}><Glyphicon glyph="refresh"/>&nbsp;reapply</a>
-        </div>);
+function onReapplyTransformComplete(errors: string[]) {
+    if (errors.length > 0) {
+        toast.error(errorContent(errors), {});
     }
-
-    if (tracing.transformStatus.inputNodeCount < 1) {
-        return "waiting to start";
-    }
-
-    const elapsed = moment(new Date(tracing.transformStatus.startedAt)).fromNow().toLocaleString();
-
-    return (<span
-        style={cellStyles.active}>{`Transform started ${elapsed}`}<br/>{`${(100 * tracing.transformStatus.outputNodeCount / tracing.transformStatus.inputNodeCount).toFixed(2)}%`}</span>);
 }
 
 function formatSource(swcTracing: ISwcTracing) {
@@ -108,54 +79,67 @@ const errorContent = (errors: any) => {
     return (<div><h3>Transform Failed</h3>{errors[0]}</div>);
 };
 
-const reapplyTransformMutation = gql`
-  mutation reapplyTransform($id: String!) {
-    reapplyTransform(id: $id) {
-        tracing {
-            id
-        }
-        errors
-    }
-  }
-`;
+interface IUpdatedAtProps {
+    tracing: ITracing;
+}
 
-@graphql(reapplyTransformMutation, {
-    props: ({mutate}) => ({
-        reapplyTransformMutation: (id: string) => mutate({
-            variables: {
-                id: id
-            }
-        })
-    })
-})
-export class TracingRow extends React.Component<ITracingRowProps, ITracingRowState> {
+const UpdatedAt = (props: IUpdatedAtProps) => {
+    const {tracing} = props;
 
-    private handleClick() {
-        this.props.onSelectedTracing(this.props.tracing);
-    }
-
-    private onReapplyClick(evt: any, id: string) {
-        evt.stopPropagation();
-        this.props.reapplyTransformMutation(id).then((result: any) => {
-            const transformResult = result.data.reapplyTransform;
-            if (transformResult.errors.length > 0) {
-                toast.error(errorContent(transformResult.errors), {});
-            }
-        }).catch((err: any) => {
-            console.log(err);
-        });
+    if (!tracing.transformStatus) {
+        return (
+            <div>
+                <span>
+                    {props.tracing.transformedAt ? moment(new Date(props.tracing.transformedAt)).fromNow().toLocaleString() : "Never"}
+                </span>
+                <br/>
+                <br/>
+                <ReapplyTransformMutation mutation={REAPPLY_TRANSFORM_MUTATION}
+                                          onCompleted={(data) => onReapplyTransformComplete(data.reapplyTransform.errors)}>
+                    {(reapplyTransform) => {
+                        return (
+                            <a onClick={() => reapplyTransform({variables: {id: props.tracing.id}})}>
+                                <Glyphicon glyph="refresh"/>&nbsp;reapply
+                            </a>
+                        );
+                    }}
+                </ReapplyTransformMutation>
+            </div>
+        );
     }
 
+    if (tracing.transformStatus.inputNodeCount < 1) {
+        return (<span>"waiting to start"</span>);
+    }
+
+    const elapsed = moment(new Date(tracing.transformStatus.startedAt)).fromNow().toLocaleString();
+
+    return (
+        <span style={cellStyles.active}>
+            {`Transform started ${elapsed}`}<br/>{`${(100 * tracing.transformStatus.outputNodeCount / tracing.transformStatus.inputNodeCount).toFixed(2)}%`}
+            </span>
+    );
+};
+
+interface ITracingRowProps {
+    isSelected: boolean;
+    tracing: ITracing;
+    onSelectedTracing?(tracing: ITracing): void;
+    reapplyTransformMutation?(id: string): Promise<ITracing>;
+}
+
+export class TracingRow extends React.Component<ITracingRowProps, {}> {
     public render() {
         const cellStyle = cellStyles.normal;
 
-        return (<tr onClick={() => this.handleClick()}
-                    style={this.props.isSelected ? rowStyles.selected : rowStyles.unselected}>
+        return (
+            <tr onClick={() => this.props.onSelectedTracing(this.props.tracing)}
+                style={this.props.isSelected ? rowStyles.selected : rowStyles.unselected}>
                 {formatTracingStructure(this.props.tracing, cellStyle)}
                 <td style={cellStyle}>{formatSource(this.props.tracing.swcTracing)}</td>
                 <td style={cellStyle}>{this.props.tracing.nodeCount}</td>
                 <td style={cellStyle}>{formatRegistrationTransform(this.props.tracing.registrationTransform)}</td>
-                <td style={cellStyle}>{formatUpdatedAt(this.props.tracing, (evt: any, id: string) => this.onReapplyClick(evt, id))}</td>
+                <td style={cellStyle}><UpdatedAt tracing={this.props.tracing}/></td>
                 <td style={cellStyle}>{this.props.tracing.swcTracing ? formatNodeLocation(this.props.tracing.swcTracing.firstNode) : ""}</td>
                 <td style={cellStyle}>{formatNodeLocation(this.props.tracing.firstNode)}</td>
             </tr>

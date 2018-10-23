@@ -1,17 +1,16 @@
 import * as React from "react";
 import {Panel, Table} from "react-bootstrap";
-import {InjectedGraphQLProps} from "react-apollo";
 
 import {ITracing} from "../../models/tracing";
 import {ITracingNode, INodePage} from "../../models/tracingNode";
-import gql from "graphql-tag";
-import {graphql} from "react-apollo";
 import {formatNodeLocation} from "../../models/nodeBase";
 import {PaginationHeader} from "../editors/PaginationHeader";
+import {TextAlignProperty} from "csstype";
+import {ITracingNodesQueryChildProps, TracingNodesQuery} from "../../graphql/tracingNode";
 
 const cellStyles = {
     normal: {
-        textAlign: "left",
+        textAlign: "left" as TextAlignProperty,
         verticalAlign: "middle"
     },
     active: {
@@ -19,6 +18,7 @@ const cellStyles = {
         fontSize: "14px"
     }
 };
+
 interface INodeRowProps {
     node: ITracingNode;
 }
@@ -38,97 +38,42 @@ class NodeRow extends React.Component<INodeRowProps, INodeRowState> {
     }
 }
 
-interface ITracingNodesGraphQLProps {
-    tracingNodePage: any;
-}
 
-interface ITracingNodeTableProps extends InjectedGraphQLProps<ITracingNodesGraphQLProps> {
-    tracing: ITracing;
-    offset: number;
-    limit: number;
+const NodeTable = (props: ITracingNodesQueryChildProps) => {
+    const {loading, tracingNodePage} = props;
 
-    onUpdateOffsetForPage(page: number): void;
-    onUpdateLimit(limit: number): void;
-}
+    const nodePage: INodePage = !loading ? tracingNodePage : null;
 
-interface ITracingNodeTableState {
-}
+    const rows = nodePage ? nodePage.nodes.map(node => (<NodeRow key={`nr_${node.id}`} node={node}/>)) : [];
 
-const nodeQuery = gql`query($page: PageInput) {
-    tracingNodePage(page: $page) {
-        offset
-        limit
-        totalCount
-        hasNextPage
-        nodes {
-          id
-          sampleNumber
-          parentNumber
-          x
-          y
-          z
-          brainArea {
-            id
-            name
-          }
-          swcNode {
-            structureIdentifier {
-            id
-            name
-            }
-          }
-       }
-    }
-}`;
+    const pageCount = nodePage ? Math.ceil(nodePage.totalCount / nodePage.limit) : 1;
 
-@graphql(nodeQuery, {
-    options: ({tracing, offset, limit}) => ({
-        variables: {page: {tracingId: tracing ? tracing.id : "", offset, limit}}
-    })
-})
-class NodeTable extends React.Component<ITracingNodeTableProps, ITracingNodeTableState> {
-    constructor(props: ITracingNodeTableProps) {
-        super(props);
-    }
+    const activePage = nodePage ? (nodePage.offset ? (Math.floor(nodePage.offset / nodePage.limit) + 1) : 1) : 0;
 
-    public render() {
-        const nodePage: INodePage = (this.props.data && !this.props.data.loading && !this.props.data.error) ? this.props.data.tracingNodePage : null;
-
-        if (this.props.data && this.props.data.error) {
-            console.log(this.props.data.error)
-        }
-
-        const rows = nodePage ? nodePage.nodes.map(node => (<NodeRow key={`nr_${node.id}`} node={node}/>)) : [];
-
-        const pageCount = nodePage ? Math.ceil(nodePage.totalCount / nodePage.limit) : 1;
-
-        const activePage = nodePage ? (nodePage.offset ? (Math.floor(nodePage.offset / nodePage.limit) + 1) : 1) : 0;
-
-        return (
-            <div>
-                <PaginationHeader pageCount={pageCount}
-                                  activePage={activePage}
-                                  limit={this.props.limit}
-                                  onUpdateLimitForPage={(limit: number) => this.props.onUpdateLimit(limit)}
-                                  onUpdateOffsetForPage={(page: number) => this.props.onUpdateOffsetForPage(page)}/>
-                {nodePage != null ?
-                    <Table condensed striped>
-                        <thead>
-                        <tr>
-                            <th>Structure</th>
-                            <th>Area</th>
-                            <th>Location</th>
-                            <th>Node | Parent</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {rows}
-                        </tbody>
-                    </Table> : null}
-            </div>
-        );
-    }
-}
+    return (
+        <div>
+            <PaginationHeader pageCount={pageCount}
+                              activePage={activePage}
+                              limit={props.limit}
+                              onUpdateLimitForPage={(limit: number) => props.onUpdateLimit(limit)}
+                              onUpdateOffsetForPage={(page: number) => props.onUpdateOffsetForPage(page)}/>
+            {nodePage != null ?
+                <Table condensed striped>
+                    <thead>
+                    <tr>
+                        <th>Structure</th>
+                        <th>Area</th>
+                        <th>Location</th>
+                        <th>Node | Parent</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {rows}
+                    </tbody>
+                </Table> : null}
+        </div>
+    );
+};
 
 interface INodeTableContainerProps {
     tracing: ITracing;
@@ -185,9 +130,9 @@ export class NodeTableContainer extends React.Component<INodeTableContainerProps
 
     private getNodeTable() {
         return (
-            <NodeTable tracing={this.props.tracing} offset={this.state.offset} limit={this.state.limit}
-                       onUpdateOffsetForPage={page => this.onUpdateOffsetForPage(page)}
-                       onUpdateLimit={limit => this.onUpdateLimit(limit)}/>
+            <TableWithNodeTracings tracing={this.props.tracing} offset={this.state.offset} limit={this.state.limit}
+                                   onUpdateOffsetForPage={page => this.onUpdateOffsetForPage(page)}
+                                   onUpdateLimit={limit => this.onUpdateLimit(limit)}/>
         );
     }
 
@@ -203,3 +148,6 @@ export class NodeTableContainer extends React.Component<INodeTableContainerProps
         );
     }
 }
+
+
+export const TableWithNodeTracings = TracingNodesQuery(NodeTable);

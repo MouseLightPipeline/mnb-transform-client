@@ -1,12 +1,9 @@
 import * as React from "react";
-import {InjectedGraphQLProps} from "react-apollo";
 import {Navbar, Nav, Glyphicon, Badge, NavItem, Modal, Button} from "react-bootstrap"
-import {Link} from "react-router";
 import {ToastContainer} from 'react-toastify';
 
 import {Content} from "./Content";
-import graphql from "react-apollo/lib/graphql";
-import {SystemMessageQuery} from "../graphql/systemMessage";
+import {SYSTEM_MESSAGE_QUERY, SystemMessageQuery} from "../graphql/systemMessage";
 
 const logoImage = require("file-loader!../../assets/mouseLight_logo_web_white.png");
 
@@ -21,48 +18,38 @@ const toastStyleOverride = {
     minWidth: "600px"
 };
 
-interface IHeadingProps extends InjectedGraphQLProps<ISystemMessageQuery> {
+interface IHeadingProps {
     onSettingsClick(): void;
 }
 
-interface IHeadingState {
-}
-
-interface ISystemMessageQuery {
-    systemMessage: string;
-}
-
-@graphql(SystemMessageQuery, {
-    options: {
-        pollInterval: 5000
-    }
-})
-class Heading extends React.Component<IHeadingProps, IHeadingState> {
-    public render() {
-        if (this.props.data && this.props.data.error) {
-            console.log(this.props.data.error);
-        }
-
-        return (
-            <Navbar fluid fixedTop style={{marginBottom: 0}}>
-                <Navbar.Header>
-                    <Navbar.Brand>
-                        <Link to="/">
-                            <img src={logoImage}/>
-                        </Link>
-                    </Navbar.Brand>
-                </Navbar.Header>
-                <Navbar.Collapse>
-                    <Nav pullRight style={{marginRight: "15px"}}>
-                        <NavItem onSelect={() => this.props.onSettingsClick()}>
-                            <Glyphicon glyph="cog"/>
-                        </NavItem>
-                    </Nav>
-                    <Navbar.Text pullRight><Badge>{this.props.data.systemMessage}</Badge></Navbar.Text>
-                </Navbar.Collapse>
-            </Navbar>);
-    }
-}
+const Heading = (props: IHeadingProps) => (
+    <Navbar fluid fixedTop style={{marginBottom: 0}}>
+        <Navbar.Header>
+            <Navbar.Brand>
+                <a href="/">
+                    <img src={logoImage}/>
+                </a>
+            </Navbar.Brand>
+        </Navbar.Header>
+        <Navbar.Collapse>
+            <Nav pullRight style={{marginRight: "15px"}}>
+                <NavItem onSelect={() => props.onSettingsClick()}>
+                    <Glyphicon glyph="cog"/>
+                </NavItem>
+            </Nav>
+            <SystemMessageQuery query={SYSTEM_MESSAGE_QUERY} pollInterval={5000}>
+                {({loading, error, data}) => {
+                    if (loading || error) {
+                        return null;
+                    }
+                    return (
+                        <Navbar.Text pullRight><Badge>{data.systemMessage}</Badge></Navbar.Text>
+                    );
+                }}
+            </SystemMessageQuery>
+        </Navbar.Collapse>
+    </Navbar>
+);
 
 const Footer = () => (
     <div className="footer">
@@ -70,15 +57,12 @@ const Footer = () => (
     </div>
 );
 
-interface IAppProps {
-}
-
 interface IAppState {
     isSettingsOpen: boolean;
 }
 
-export class App extends React.Component<IAppProps, IAppState> {
-    public constructor(props: IAppProps) {
+export class App extends React.Component<{}, IAppState> {
+    public constructor(props: {}) {
         super(props);
 
         this.state = {
@@ -96,16 +80,16 @@ export class App extends React.Component<IAppProps, IAppState> {
 
     public render() {
         return (
-                <div>
-                    <ToastContainer autoClose={3000} position="bottom-center" style={toastStyleOverride}/>
-                    <SettingsDialog show={this.state.isSettingsOpen}
-                                    onHide={() => this.onSettingsClose()}/>
-                    <Heading onSettingsClick={() => this.onSettingsClick()}/>
-                    <div style={styles.content}>
-                        <Content/>
-                    </div>
-                    <Footer/>
+            <div>
+                <ToastContainer autoClose={3000} position="bottom-center" style={toastStyleOverride}/>
+                <SettingsDialog show={this.state.isSettingsOpen}
+                                onHide={() => this.onSettingsClose()}/>
+                <Heading onSettingsClick={() => this.onSettingsClick()}/>
+                <div style={styles.content}>
+                    <Content/>
                 </div>
+                <Footer/>
+            </div>
         );
     }
 }
@@ -116,23 +100,16 @@ interface ISettingsDialogProps {
     onHide(): void;
 }
 
-interface ISettingsDialogState {
-}
-
-class SettingsDialog extends React.Component<ISettingsDialogProps, ISettingsDialogState> {
-    render() {
-        return (
-            <Modal show={this.props.show} onHide={this.props.onHide} aria-labelledby="contained-modal-title-sm">
-                <Modal.Header closeButton>
-                    <Modal.Title id="contained-modal-title-sm">Settings</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    There are no settings for this service.
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button bsSize="small" onClick={this.props.onHide}>Close</Button>
-                </Modal.Footer>
-            </Modal>
-        );
-    }
-}
+const SettingsDialog = (props: ISettingsDialogProps) => (
+    <Modal show={props.show} onHide={props.onHide} aria-labelledby="contained-modal-title-sm">
+        <Modal.Header closeButton>
+            <Modal.Title id="contained-modal-title-sm">Settings</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+            There are no settings for this service.
+        </Modal.Body>
+        <Modal.Footer>
+            <Button bsSize="small" onClick={props.onHide}>Close</Button>
+        </Modal.Footer>
+    </Modal>
+);

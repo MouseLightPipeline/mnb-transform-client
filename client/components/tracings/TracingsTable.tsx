@@ -1,82 +1,18 @@
 import * as React from "react";
 import {Panel, Table, Alert, ControlLabel, Grid, Row, Col} from "react-bootstrap";
 import {Dropdown, DropdownItemProps} from "semantic-ui-react";
-import {graphql, InjectedGraphQLProps} from "react-apollo";
-import gql from "graphql-tag";
-
-import {ITracing, ITracingPage} from "../../models/tracing";
 import Timer = NodeJS.Timer;
-import {TracingRow} from "./TracingRow";
-import {GraphQLDataProps} from "react-apollo/lib/graphql";
-import {
-    AnyTracingStructure,
-    AnyTracingStructureId,
-    displayTracingStructure,
-    ITracingStructure
-} from "../../models/tracingStructure";
-import {PaginationHeader} from "../editors/PaginationHeader";
 
-const tracingsQuery = gql`query ($queryInput: TracingsQueryInput) {
-  tracings(queryInput: $queryInput) {
-    offset
-    limit
-    totalCount
-    matchCount
-    tracings {
-      id
-      nodeCount
-      firstNode {
-        sampleNumber
-        parentNumber
-        id
-        x
-        y
-        z
-      }
-      transformStatus {
-        startedAt
-        inputNodeCount
-        outputNodeCount
-      }
-      transformedAt
-      createdAt
-      updatedAt
-      swcTracing {
-        id
-        annotator
-        filename
-        fileComments
-        offsetX
-        offsetY
-        offsetZ
-        firstNode {
-          sampleNumber
-          parentNumber
-          id
-          x
-          y
-          z
-        }
-        tracingStructure {
-          id
-          name
-          value
-        }
-      }
-      registrationTransform {
-        id
-        name
-        notes
-        location
-      }
-    }
-  }
-}`;
+import {ITracing} from "../../models/tracing";
+import {TracingRow} from "./TracingRow";
+import {AnyTracingStructure, displayTracingStructure} from "../../models/tracingStructure";
+import {PaginationHeader} from "../editors/PaginationHeader";
+import {ITracingsQueryChildProps} from "../../graphql/tracings";
 
 interface ITracingsTableProps {
-    data: GraphQLDataProps & ITracingsGraphQLProps;
+    loading: boolean;
     selectedTracing: ITracing;
-    tracingStructureFilterId: string;
+    tracings: ITracing[];
     onSelectedTracing?(tracing: ITracing): void;
 }
 
@@ -85,7 +21,7 @@ interface ITracingsTableState {
     tracings: ITracing[];
 }
 
-class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableState> {
+class InternalTracingsTable extends React.Component<ITracingsTableProps, ITracingsTableState> {
     private _timeout: Timer | number; // Typescript and browser can't agree.
 
     public constructor(props: ITracingsTableProps) {
@@ -110,25 +46,17 @@ class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableS
     public componentWillReceiveProps(nextProps: ITracingsTableProps) {
         // Cache current so that when going into anything but an instant query, existing rows in table don't drop during
         // this data.loading phase.  Causes flicker as table goes from populated to empty back to populated.
-        if (this.props.data && !this.props.data.loading) {
-            this.setState({hasLoaded: true, tracings: this.props.data.tracings.tracings}, null);
+        if (!nextProps.loading) {
+            this.setState({hasLoaded: true, tracings: nextProps.tracings});
         }
     }
 
     public render() {
-        let tracings: ITracing[] = [];
-
-        if (!this.props.data || this.props.data.loading) {
-            if (this.state.hasLoaded) {
-                tracings = this.state.tracings;
-            }
-        } else if (this.props.data.error) {
-            console.log(this.props.data.error);
-        } else {
-            tracings = this.props.data.tracings.tracings;
+        if (this.props.loading && !this.state.hasLoaded) {
+            return (<h4>Loading...</h4>);
         }
 
-        const rows = tracings.map(tracing => (
+        const rows = this.state.tracings.map(tracing => (
             <TracingRow key={`tr_${tracing.id}`} tracing={tracing} onSelectedTracing={this.props.onSelectedTracing}
                         isSelected={this.props.selectedTracing && tracing.id === this.props.selectedTracing.id}/>));
 
@@ -164,49 +92,8 @@ class TracingsTable extends React.Component<ITracingsTableProps, ITracingsTableS
     }
 }
 
-interface ITracingStructuresQueryProps {
-    tracingStructures: ITracingStructure[];
-}
-
-interface ITracingsGraphQLProps {
-    tracings: ITracingPage;
-}
-
-interface ITracingTableContainerProps extends InjectedGraphQLProps<ITracingsGraphQLProps> {
-    selectedTracing: ITracing;
-    offset: number;
-    limit: number;
-    tracingStructureFilterId?: string;
-    tracingStructuresQuery?: ITracingStructuresQueryProps & GraphQLDataProps;
-
-    onUpdateOffsetForPage(page: number): void;
-    onUpdateLimit(limit: number): void;
-    onSelectedTracing?(tracingId: ITracing): void;
-    onTracingStructureFilter(structureId: string): void;
-}
-
-interface ITracingTableContainerState {
-}
-
-const TracingStructuresQuery = gql`query {
-    tracingStructures {
-        id
-        name
-        value
-    }
-}`;
-
-@graphql(tracingsQuery, {
-    options: ({offset, limit, tracingStructureFilterId}) => ({
-        pollInterval: 5 * 1000,
-        variables: {queryInput: {offset, limit, tracingStructureId: tracingStructureFilterId == AnyTracingStructureId ? "" : tracingStructureFilterId}}
-    })
-})
-@graphql(TracingStructuresQuery, {
-    name: "tracingStructuresQuery"
-})
-export class TracingTableContainer extends React.Component<ITracingTableContainerProps, ITracingTableContainerState> {
-    constructor(props: ITracingTableContainerProps) {
+export class TracingTableContainer extends React.Component<ITracingsQueryChildProps, {}> {
+    constructor(props: ITracingsQueryChildProps) {
         super(props);
 
         this.state = {tracingStructureFilterId: ""};
@@ -241,25 +128,26 @@ export class TracingTableContainer extends React.Component<ITracingTableContaine
     }
 
     public render() {
-        if (this.props.data && this.props.data.error) {
+        const {loading, error} = this.props;
+
+        if (error) {
             return (
                 <Panel header={this.renderHeader("Tracings")}>
                     <Alert bsStyle="danger">
                         <div>
                             <h5>Service Error</h5>
-                            {this.props.data.error.message}
+                            {this.props.error.message}
                         </div>
                     </Alert>
                 </Panel>
             );
         }
 
-        let tracingStructures = this.props.tracingStructuresQuery && !this.props.tracingStructuresQuery.loading ? this.props.tracingStructuresQuery.tracingStructures : [];
+        let tracingStructures = loading ? [] : this.props.tracingStructures;
 
         tracingStructures = tracingStructures.slice();
 
         tracingStructures.unshift(AnyTracingStructure);
-
 
         const tracingStructureOptions: DropdownItemProps[] = tracingStructures.map(t => {
             return {
@@ -269,13 +157,13 @@ export class TracingTableContainer extends React.Component<ITracingTableContaine
             }
         });
 
-        const tracingsPage = (this.props.data && !this.props.data.loading && !this.props.data.error) ? this.props.data.tracings : null;
+        const tracings = loading ? [] : this.props.tracings.tracings;
 
-        const totalCount = tracingsPage ? tracingsPage.matchCount : 0;
+        const totalCount = loading ? 0 : this.props.tracings.matchCount;
 
-        const pageCount = tracingsPage ? Math.ceil(totalCount / tracingsPage.limit) : 1;
+        const pageCount = loading ? 1 : Math.ceil(totalCount / this.props.tracings.limit);
 
-        const activePage = tracingsPage ? (tracingsPage.offset ? (Math.floor(tracingsPage.offset / tracingsPage.limit) + 1) : 1) : 0;
+        const activePage = loading ? 0 : (this.props.tracings.offset ? (Math.floor(this.props.tracings.offset / this.props.tracings.limit) + 1) : 1);
 
         return (
             <Panel header={this.renderHeader("Tracings")}
@@ -291,15 +179,8 @@ export class TracingTableContainer extends React.Component<ITracingTableContaine
                         <Row style={{margin: "0px"}}>
                             <Col md={2}>
                                 <ControlLabel>Tracing Structure:&nbsp;</ControlLabel>
-                                {/*
-                                <TracingStructureSelect idName="createTracingStructureSelect"
-                                                        clearable={false}
-                                                        options={tracingStructures}
-                                                        selectedOption={this.props.tracingStructureFilter}
-                                                        onSelect={t => {
-                                                            this.props.onTracingStructureFilter(t)
-                                                        }}/>*/}
-                                <Dropdown placeholder={"Select the structure..."} fluid selection options={tracingStructureOptions}
+                                <Dropdown placeholder={"Select the structure..."} fluid selection
+                                          options={tracingStructureOptions}
                                           value={this.props.tracingStructureFilterId}
                                           onChange={(e, {value}) => this.props.onTracingStructureFilter(value as string)}/>
                             </Col>
@@ -307,10 +188,9 @@ export class TracingTableContainer extends React.Component<ITracingTableContaine
                     </Grid>
                 </div>
 
-                <TracingsTable data={this.props.data}
-                               onSelectedTracing={this.props.onSelectedTracing}
-                               selectedTracing={this.props.selectedTracing}
-                               tracingStructureFilterId={this.props.tracingStructureFilterId}/>
+                <InternalTracingsTable loading={this.props.loading} tracings={tracings}
+                                       onSelectedTracing={this.props.onSelectedTracing}
+                                       selectedTracing={this.props.selectedTracing}/>
             </Panel>
         );
     }

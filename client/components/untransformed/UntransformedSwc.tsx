@@ -1,17 +1,15 @@
 import * as React from "react";
 import {Table, Button} from "react-bootstrap";
-import {graphql, InjectedGraphQLProps} from "react-apollo";
-import gql from "graphql-tag";
 import {toast} from "react-toastify";
-import {cloneDeep} from "lodash"
 
 import {ISwcTracing} from "../../models/swcTracing";
 import {ITracing} from "../../models/tracing";
-import {GraphQLDataProps} from "react-apollo/lib/graphql";
+import {APPLY_TRANSFORM_MUTATION, ApplyTransformMutation} from "../../graphql/swcTracings";
+import {TextAlignProperty} from "csstype";
 
 const cellStyles = {
     normal: {
-        textAlign: "center",
+        textAlign: "center" as TextAlignProperty,
         verticalAlign: "middle"
     },
     active: {
@@ -23,6 +21,13 @@ const cellStyles = {
 const errorContent = (errors: any) => {
     return (<div><h3>Transform Failed</h3>{errors[0]}</div>);
 };
+
+function onApplyTransformComplete(errors: string[]) {
+    if (errors.length > 0) {
+        toast.error(errorContent(errors), {});
+    }
+}
+
 
 function formatTracingStructure(tracing: ISwcTracing, cellStyle: any) {
     if (!tracing || !tracing.tracingStructure) {
@@ -53,100 +58,23 @@ function formatSource(swcTracing: ISwcTracing) {
     );
 }
 
-interface IUntransformedRowGraphQLProps {
-}
-
-interface IUntransformedRowProps extends InjectedGraphQLProps<IUntransformedRowGraphQLProps> {
+interface IUntransformedRowProps {
     tracing: ISwcTracing;
     applyTransformMutation?(id: string): Promise<ITracing>;
 }
 
-interface IUntransformedRowState {
-}
-
-const applyTransformMutation = gql`
-  mutation applyTransform($swcId: String!) {
-    applyTransform(swcId: $swcId) {
-        tracing {
-            id
-            nodeCount
-            firstNode {
-              sampleNumber
-              parentNumber
-              id
-              x
-              y
-              z
-            }
-            transformStatus {
-              startedAt
-              inputNodeCount
-              outputNodeCount
-            }
-            transformedAt
-            createdAt
-            updatedAt
-            swcTracing {
-              id
-              annotator
-              filename
-              fileComments
-              offsetX
-              offsetY
-              offsetZ
-              firstNode {
-                sampleNumber
-                parentNumber
-                id
-                x
-                y
-                z
-              },
-              tracingStructure {
-                id
-                name
-                value
-              }
-            }
-            registrationTransform {
-              id
-              name
-              notes
-              location
-            }
-        }
-        errors
-    }
-  }
-`;
-
-@graphql(applyTransformMutation, {
-    props: ({mutate}) => ({
-        applyTransformMutation: (id: string) => mutate({
-            variables: {
-                swcId: id
-            }
-        })
-    })
-})
-class UntransformedRow extends React.Component<IUntransformedRowProps, IUntransformedRowState> {
-
-    private onApplyClick(id: string) {
-        this.props.applyTransformMutation(id).then((result: any) => {
-            const transformResult = result.data.applyTransform;
-            if (transformResult.errors.length > 0) {
-                toast.error(errorContent(transformResult.errors), {});
-            }
-        }).catch((err: any) => {
-            console.log(err);
-        });
-    }
-
+class UntransformedRow extends React.Component<IUntransformedRowProps, {}> {
     private renderApplyCell() {
         return (
-            <Button bsSize="xsmall" bsStyle="primary" onClick={() => this.onApplyClick(this.props.tracing.id)}>
-                Apply Transform&nbsp;
-            </Button>
+            <ApplyTransformMutation mutation={APPLY_TRANSFORM_MUTATION}
+                                    onCompleted={(data) => onApplyTransformComplete(data.applyTransform.errors)}>
+                {(applyTransform) => (
+                    <Button bsSize="small" bsStyle="primary">Apply Transform&nbsp; onClick={() => {
+                        applyTransform({variables: {swcId: this.props.tracing.id}});
+                    }}
+                    </Button>
+                )}
+            </ApplyTransformMutation>
         );
     }
 
@@ -163,29 +91,17 @@ class UntransformedRow extends React.Component<IUntransformedRowProps, IUntransf
     }
 }
 
-
-const untransformedSubscription = gql`subscription onUntransformedSwc {
-    transformApplied {
-      id
-    }
-}`;
-
-interface IUntransformedGraphQLProps {
+interface IUntransformedTableProps {
+    loading: boolean;
     untransformedSwc: ISwcTracing[];
 }
 
-interface IUntransformedTableProps {
-    data: GraphQLDataProps & IUntransformedGraphQLProps;
-}
-
 interface IUntransformedTableState {
-    hasLoaded: boolean;
-    tracings: ISwcTracing[];
+    hasLoaded?: boolean;
+    tracings?: ISwcTracing[];
 }
 
 export class UntransformedSwcTable extends React.Component<IUntransformedTableProps, IUntransformedTableState> {
-    private _subscription: any = null;
-
     public constructor(props: IUntransformedTableProps) {
         super(props);
 
@@ -193,44 +109,22 @@ export class UntransformedSwcTable extends React.Component<IUntransformedTablePr
     }
 
     public componentWillReceiveProps(nextProps: IUntransformedTableProps) {
-
-        if (this.props.data && !this.props.data.loading) {
+        if (!nextProps.loading) {
             // Cache current so that when going into anything but an instant query, existing rows in table don't drop during
             // this data.loading phase.  Causes flicker as table goes from populated to empty back to populated.
-            this.setState({hasLoaded: true, tracings: this.props.data.untransformedSwc}, null);
-        }
-
-        if (nextProps.data && !nextProps.data.loading) {
-            if (!this._subscription) {
-                this._subscription = nextProps.data.subscribeToMore({
-                    document: untransformedSubscription,
-                    updateQuery: (previous, {subscriptionData}) => {
-                        const modifiedResult: any = cloneDeep(previous);
-                        modifiedResult.untransformedSwc = modifiedResult.untransformedSwc.filter((u: ISwcTracing) => u.id !== subscriptionData.data.transformApplied.id);
-                        return modifiedResult;
-                    },
-                    onError: (err: any) => console.log(err)
-                });
-            }
+            this.setState({hasLoaded: true, tracings: nextProps.untransformedSwc});
         }
 
         return true;
     }
 
     public render() {
-        let tracings: ISwcTracing[] = [];
-
-        if (!this.props.data || this.props.data.loading) {
-            if (this.state.hasLoaded) {
-                tracings = this.state.tracings;
-            }
-        } else if (this.props.data.error) {
-            console.log(this.props.data.error);
-        } else {
-            tracings = this.props.data.untransformedSwc;
+        if (!this.state.hasLoaded) {
+            return (<h4>Loading...</h4>);
         }
 
-        const rows = tracings.map(tracing => (<UntransformedRow key={`tr_${tracing.id}`} tracing={tracing}/>));
+        const rows = this.state.tracings.map(tracing => (
+            <UntransformedRow key={`tr_${tracing.id}`} tracing={tracing}/>));
 
         return (
             <Table condensed>

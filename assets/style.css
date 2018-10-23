@@ -1,0 +1,9 @@
+.toastify {
+    z-index: 10000;
+}
+
+.toastify--bottom-center {
+    min-width: 600px;
+    margin-left: -300px;
+    margin-bottom: 40px;
+}

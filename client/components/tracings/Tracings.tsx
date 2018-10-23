@@ -5,9 +5,9 @@ import {TracingTableContainer} from "./TracingsTable";
 import {ITracing} from "../../models/tracing";
 import {NodeTableContainer} from "./NodeTable";
 import {AnyTracingStructure} from "../../models/tracingStructure";
+import {TracingsQuery} from "../../graphql/tracings";
 
-interface ITracingsProps {
-}
+export const TableWithTracings = TracingsQuery(TracingTableContainer);
 
 interface ITracingsState {
     offset?: number;
@@ -17,8 +17,8 @@ interface ITracingsState {
     tracingStructureFilterId?: string;
 }
 
-export class Tracings extends React.Component<ITracingsProps, ITracingsState> {
-    constructor(props: ITracingsProps) {
+export class Tracings extends React.Component<{}, ITracingsState> {
+    constructor(props: {}) {
         super(props);
         this.state = {
             offset: 0,
@@ -59,14 +59,14 @@ export class Tracings extends React.Component<ITracingsProps, ITracingsState> {
 
     private renderTracings() {
         return this.renderSection(
-            <TracingTableContainer offset={this.state.offset}
+            <TableWithTracings offset={this.state.offset}
                                    limit={this.state.limit}
                                    selectedTracing={this.state.selectedTracing}
                                    tracingStructureFilterId={this.state.tracingStructureFilterId}
                                    onUpdateOffsetForPage={page => this.onUpdateOffsetForPage(page)}
-                                   onUpdateLimit={limit => this.onUpdateLimit(limit)}
+                                   onUpdateLimit={(limit: number) => this.onUpdateLimit(limit)}
                                    onTracingStructureFilter={(id: string) => this.onTracingStructureFilter(id)}
-                                   onSelectedTracing={(tracing => this.onSelectTracing(tracing))}/>
+                                   onSelectedTracing={((tracing: ITracing) => this.onSelectTracing(tracing))}/>
         );
     }
 
