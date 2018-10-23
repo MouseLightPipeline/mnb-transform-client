@@ -15,8 +15,8 @@ function loadConfiguration() {
     config.graphQLHostname = process.env.TRANSFORM_API_HOST || process.env.CORE_SERVICES_HOST || config.graphQLHostname;
     config.graphQLPort = parseInt(process.env.TRANSFORM_API_PORT) || config.graphQLPort;
     config.authRequired = process.env.TRANSFORM_AUTH_REQUIRED !== "false";
-    config.authUser = process.env.SWC_TRANSFORM_USER || config.authUser;
-    config.authPassword = process.env.SWC_TRANSFORM_PASS || config.authPassword;
+    config.authUser = process.env.TRANSFORM_AUTH_USER || config.authUser;
+    config.authPassword = process.env.TRANSFORM_AUTH_PASS || config.authPassword;
 
     return config;
 }
