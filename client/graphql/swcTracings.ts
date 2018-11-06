@@ -39,7 +39,8 @@ type UntransformedSwcQueryResponse = {
     untransformedSwc: ISwcTracing[];
 }
 
-export class UntransformedSwcQuery extends Query<UntransformedSwcQueryResponse, {}>{}
+export class UntransformedSwcQuery extends Query<UntransformedSwcQueryResponse, {}> {
+}
 
 //
 // Apply Transform Mutation

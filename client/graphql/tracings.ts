@@ -1,6 +1,6 @@
 import {ApolloError} from "apollo-client";
 import gql from "graphql-tag";
-import {graphql} from "react-apollo";
+import {graphql, Query} from "react-apollo";
 
 import {ITracing} from "../models/tracing";
 import {AnyTracingStructureId, ITracingStructure} from "../models/tracingStructure";
@@ -54,7 +54,7 @@ export const TracingFieldsFragment = gql`fragment TracingFields on Tracing {
     }
 }`;
 
-const TRACINGS_QUERY = gql`query ($queryInput: TracingsQueryInput) {
+export const TRACINGS_QUERY = gql`query ($queryInput: TracingsQueryInput) {
   tracings(queryInput: $queryInput) {
     offset
     limit
@@ -72,6 +72,7 @@ const TRACINGS_QUERY = gql`query ($queryInput: TracingsQueryInput) {
 }
 ${TracingFieldsFragment}`;
 
+/*
 type TracingsQueryInputProps = {
     offset: number;
     limit: number;
@@ -84,6 +85,7 @@ type TracingsQueryInputProps = {
     onSelectedTracing?(tracingId: ITracing): void;
     onTracingStructureFilter(structureId: string): void;
 }
+*/
 
 type TracingsQueryPageInput = {
     offset: number;
@@ -108,6 +110,7 @@ type TracingsQueryResponse = {
     tracingStructures: ITracingStructure[];
 }
 
+/*
 export interface ITracingsQueryChildProps {
     loading: boolean,
     error?: ApolloError,
@@ -125,20 +128,7 @@ export interface ITracingsQueryChildProps {
     onSelectedTracing?(tracingId: ITracing): void;
     onTracingStructureFilter(structureId: string): void;
 }
+*/
 
-export const TracingsQuery = graphql<TracingsQueryInputProps, TracingsQueryResponse, TracingsQueryVariables, ITracingsQueryChildProps>(TRACINGS_QUERY, {
-    options: ({offset, limit, tracingStructureFilterId}) => ({
-        pollInterval: 5000,
-        variables: {
-            queryInput: {
-                offset,
-                limit,
-                tracingStructureId: tracingStructureFilterId == AnyTracingStructureId ? "" : tracingStructureFilterId,
-            }
-        }
-    }),
-    props: ({data, ownProps}) => ({
-        ...data,
-        ...ownProps
-    })
-});
+export class TracingsQuery extends Query<TracingsQueryResponse, TracingsQueryVariables> {
+}

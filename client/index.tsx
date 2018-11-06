@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom";
 
 require("file-loader?name=index.html!../index.html");
 
-import 'react-toastify/dist/ReactToastify.min.css';
+import "react-toastify/dist/ReactToastify.min.css";
 
 // TODO Remove after removing bootstrap
 import "../assets/mouselight.bootstrap.css";

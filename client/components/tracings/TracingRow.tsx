@@ -1,7 +1,6 @@
 import * as React from "react";
-import {Glyphicon} from "react-bootstrap";
 import moment = require("moment");
-import {toast} from 'react-toastify';
+import {toast} from "react-toastify";
 
 import {formatNodeLocation} from "../../models/nodeBase";
 import {IRegistrationTransform} from "../../models/registrationTransform";
@@ -9,6 +8,7 @@ import {ISwcTracing} from "../../models/swcTracing";
 import {ITracing} from "../../models/tracing";
 import {TextAlignProperty} from "csstype";
 import {REAPPLY_TRANSFORM_MUTATION, ReapplyTransformMutation} from "../../graphql/swcTracings";
+import {Icon, Table} from "semantic-ui-react";
 
 const dendriteImage = require("file-loader!../../../assets/dendrite.png");
 const axonImage = require("file-loader!../../../assets/axon.png");
@@ -99,7 +99,7 @@ const UpdatedAt = (props: IUpdatedAtProps) => {
                     {(reapplyTransform) => {
                         return (
                             <a onClick={() => reapplyTransform({variables: {id: props.tracing.id}})}>
-                                <Glyphicon glyph="refresh"/>&nbsp;reapply
+                                <Icon name="refresh"/>&nbsp;reapply
                             </a>
                         );
                     }}
@@ -124,7 +124,7 @@ const UpdatedAt = (props: IUpdatedAtProps) => {
 interface ITracingRowProps {
     isSelected: boolean;
     tracing: ITracing;
-    onSelectedTracing?(tracing: ITracing): void;
+    onSelectTracing?(tracing: ITracing): void;
     reapplyTransformMutation?(id: string): Promise<ITracing>;
 }
 
@@ -133,7 +133,7 @@ export class TracingRow extends React.Component<ITracingRowProps, {}> {
         const cellStyle = cellStyles.normal;
 
         return (
-            <tr onClick={() => this.props.onSelectedTracing(this.props.tracing)}
+            <Table.Row onClick={() => this.props.onSelectTracing(this.props.tracing)}
                 style={this.props.isSelected ? rowStyles.selected : rowStyles.unselected}>
                 {formatTracingStructure(this.props.tracing, cellStyle)}
                 <td style={cellStyle}>{formatSource(this.props.tracing.swcTracing)}</td>
@@ -142,7 +142,7 @@ export class TracingRow extends React.Component<ITracingRowProps, {}> {
                 <td style={cellStyle}><UpdatedAt tracing={this.props.tracing}/></td>
                 <td style={cellStyle}>{this.props.tracing.swcTracing ? formatNodeLocation(this.props.tracing.swcTracing.firstNode) : ""}</td>
                 <td style={cellStyle}>{formatNodeLocation(this.props.tracing.firstNode)}</td>
-            </tr>
+            </Table.Row>
         );
     }
 }

@@ -1,5 +1,6 @@
 import * as React from "react";
-import {Pagination, FormGroup, FormControl} from "react-bootstrap";
+import {Input, Pagination, Table} from "semantic-ui-react";
+
 const Slider = require("rc-slider").default;
 
 export interface IPaginationHeaderProps {
@@ -12,7 +13,8 @@ export interface IPaginationHeaderProps {
 }
 
 export interface IPaginationHeaderState {
-    jumpPage?: number;
+    pageJumpText?: string;
+    isValidPageJump?: boolean;
     limit?: number;
 }
 
@@ -20,87 +22,56 @@ export class PaginationHeader extends React.Component<IPaginationHeaderProps, IP
     public constructor(props: IPaginationHeaderProps) {
         super(props);
 
+        const pageJumpText = props.activePage.toFixed(0);
+
         this.state = {
-            jumpPage: 1,
-            limit: 10
+            pageJumpText,
+            isValidPageJump: isValidJumpText(pageJumpText, props.pageCount),
+            limit: props.limit
         }
     }
 
-    private onPageTextChanged(evt: any) {
-        this.setState({jumpPage: evt.target.value});
+    private setActivePage(value: string) {
+        const page = parseInt(value);
+        this.props.onUpdateOffsetForPage(page);
+    }
+
+    private onPageTextChanged(value: string) {
+        const page = parseInt(value);
+        const isValid = !isNaN(page) && (page > 0 && page <= this.props.pageCount);
+        this.setState({pageJumpText: value, isValidPageJump: isValid});
     }
 
     private onKeyPress(evt: any) {
-        if (evt.charCode === 13) {
-            const page = parseInt(evt.target.value);
-
-            if (!isNaN(page) && page > 0 && page <= this.props.pageCount) {
-                this.props.onUpdateOffsetForPage(page);
-            }
+        if (evt.charCode === 13 && isValidJumpText(evt.target.value, this.props.pageCount)) {
+            this.setActivePage(evt.target.value);
         }
     }
 
-    private get validationState(): any {
-        return (this.state.jumpPage > 0 && this.state.jumpPage <= this.props.pageCount) ? null : "warning";
-    }
-
-    public componentWillReceiveProps(nextProps: IPaginationHeaderProps) {
-        if (nextProps.activePage != this.props.activePage) {
-            this.setState({jumpPage: nextProps.activePage});
-        }
-        this.setState({limit: nextProps.limit});
-    }
-
-    private renderGrid() {
-        const paddingTop = this.props.pageCount > 1 ? "0px" : "24px";
-
-        return (
-            <div style={{
-                padding: "0px",
-                backgroundColor: "#fff",
-                height: "71px",
-                display: "inline-block"
-            }}>
-                <table >
-                    <tbody>
-                    <tr>
-                        <td style={{
-                            width: "400px",
-                            paddingRight: "60px",
-                            paddingLeft: "20px",
-                            paddingTop: paddingTop,
-                            paddingBottom: "10px"
-                        }}>
-                            <Slider min={10} max={50} step={5} value={this.state.limit}
-                                           marks={{10: "10", 20: "20", 30: "30", 40: "40", 50: "50"}}
-                                           onChange={(value: number) => this.setState({limit: value}, null)}
-                                           onAfterChange={(value: number) => this.props.onUpdateLimitForPage(value)}/>
-                        </td>
-                        {this.renderPagination()}
-                        {this.renderPageJump()}
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        );
+    public componentWillReceiveProps(props: IPaginationHeaderProps) {
+        this.setState({
+            limit: props.limit,
+            isValidPageJump: isValidJumpText(props.activePage.toFixed(0), props.pageCount)
+        });
     }
 
     private renderPageJump() {
         if (this.props.pageCount > 1) {
+            const action = {
+                color: "blue",
+                content: "Go",
+                labelPosition: "right",
+                icon: "chevron right",
+                size: "mini",
+                disabled: !this.state.isValidPageJump,
+                onClick: () => this.setActivePage(this.state.pageJumpText)
+            };
+
             return (
-                <td>
-                    <FormGroup bsSize="sm" validationState={this.validationState} style={{
-                        display: "inline-block",
-                        paddingTop: "20px",
-                        marginLeft: "20px",
-                        width: "80px"
-                    }}>
-                        <FormControl type="text"
-                                     value={this.state.jumpPage}
-                                     onKeyPress={(evt: any) => this.onKeyPress(evt)}
-                                     onChange={(evt: any) => this.onPageTextChanged(evt)}/>
-                    </FormGroup>
-                </td>
+                <Input size="mini" action={action} error={!this.state.isValidPageJump} type="text" placehoder="Page..."
+                       value={this.state.pageJumpText}
+                       onKeyPress={(e: Event) => this.onKeyPress(e)}
+                       onChange={(e, {value}) => this.onPageTextChanged(value)}/>
             );
         } else {
             return null;
@@ -110,18 +81,11 @@ export class PaginationHeader extends React.Component<IPaginationHeaderProps, IP
     private renderPagination() {
         if (this.props.pageCount > 1) {
             return (
-                <td style={{paddingTop: "5px"}}>
-                    <Pagination prev next ellipsis boundaryLinks bsSize="medium"
-                                style={{display: "inline"}}
-                                first={this.props.pageCount > 2}
-                                last={this.props.pageCount > 2}
-                                maxButtons={10}
-                                items={this.props.pageCount}
-                                activePage={this.props.activePage}
-                                onSelect={(page: any) => {
-                                    this.props.onUpdateOffsetForPage(page)
-                                }}/>
-                </td>
+                <Pagination size="mini" totalPages={this.props.pageCount}
+                            activePage={this.props.activePage}
+                            onPageChange={(e, {activePage}) => {
+                                this.setActivePage(activePage.toString())
+                            }}/>
             );
         } else {
             return null;
@@ -129,6 +93,32 @@ export class PaginationHeader extends React.Component<IPaginationHeaderProps, IP
     }
 
     public render() {
-        return this.renderGrid();
+        return (
+            <Table style={{border: "none", background: "transparent"}}>
+                <Table.Body>
+                    <Table.Row>
+                        <Table.Cell style={{width: "33%", paddingTop: 0}}>
+                            <Slider min={10} max={50} step={5} value={this.state.limit} style={{maxWidth: "300px"}}
+                                    marks={{10: "10", 20: "20", 30: "30", 40: "40", 50: "50"}}
+                                    onChange={(value: number) => this.setState({limit: value})}
+                                    onAfterChange={(value: number) => this.props.onUpdateLimitForPage(value)}/>
+                        </Table.Cell>
+
+                        <Table.Cell style={{width: "34%"}} textAlign="center">
+                            {this.renderPagination()}
+                        </Table.Cell>
+
+                        <Table.Cell style={{width: "33%", paddingRight: "1px"}} textAlign="right">
+                            {this.renderPageJump()}
+                        </Table.Cell>
+                    </Table.Row>
+                </Table.Body>
+            </Table>
+        );
     }
+}
+
+function isValidJumpText(value: string, pageCount: number): boolean {
+    const page = parseInt(value);
+    return !isNaN(page) && (page > 0 && page <= pageCount);
 }

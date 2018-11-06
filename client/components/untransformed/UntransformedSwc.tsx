@@ -1,22 +1,10 @@
 import * as React from "react";
-import {Table, Button} from "react-bootstrap";
+import {Button, Icon, Message, Table} from "semantic-ui-react";
 import {toast} from "react-toastify";
 
 import {ISwcTracing} from "../../models/swcTracing";
 import {ITracing} from "../../models/tracing";
 import {APPLY_TRANSFORM_MUTATION, ApplyTransformMutation} from "../../graphql/swcTracings";
-import {TextAlignProperty} from "csstype";
-
-const cellStyles = {
-    normal: {
-        textAlign: "center" as TextAlignProperty,
-        verticalAlign: "middle"
-    },
-    active: {
-        fontWeight: 800,
-        fontSize: "14px"
-    }
-};
 
 const errorContent = (errors: any) => {
     return (<div><h3>Transform Failed</h3>{errors[0]}</div>);
@@ -28,17 +16,16 @@ function onApplyTransformComplete(errors: string[]) {
     }
 }
 
-
-function formatTracingStructure(tracing: ISwcTracing, cellStyle: any) {
+function formatTracingStructure(tracing: ISwcTracing) {
     if (!tracing || !tracing.tracingStructure) {
-        return (<td style={cellStyle}> {tracing.id.slice(0, 8)}</td>);
+        return (<td> {tracing.id.slice(0, 8)}</td>);
     }
 
     const structure = tracing.tracingStructure;
 
     return (
-        <td style={cellStyle}>
-            {tracing.id.slice(0, 8)}
+        <td>
+            {tracing.id}
             <br/>
             {structure.name}
         </td>);
@@ -69,9 +56,9 @@ class UntransformedRow extends React.Component<IUntransformedRowProps, {}> {
             <ApplyTransformMutation mutation={APPLY_TRANSFORM_MUTATION}
                                     onCompleted={(data) => onApplyTransformComplete(data.applyTransform.errors)}>
                 {(applyTransform) => (
-                    <Button bsSize="small" bsStyle="primary">Apply Transform&nbsp; onClick={() => {
+                    <Button size="mini" color="teal" onClick={() => {
                         applyTransform({variables: {swcId: this.props.tracing.id}});
-                    }}
+                    }}> Apply Transform
                     </Button>
                 )}
             </ApplyTransformMutation>
@@ -79,14 +66,12 @@ class UntransformedRow extends React.Component<IUntransformedRowProps, {}> {
     }
 
     public render() {
-        const cellStyle = cellStyles.normal;
-
-        return (<tr>
-                <td>{this.renderApplyCell()}</td>
-                {formatTracingStructure(this.props.tracing, cellStyle)}
-                <td style={cellStyle}>{formatSource(this.props.tracing)}</td>
-                <td style={cellStyle}>{this.props.tracing.nodeCount}</td>
-            </tr>
+        return (<Table.Row>
+                <Table.Cell style={{maxWidth: "200px"}}>{this.renderApplyCell()}</Table.Cell>
+                {formatTracingStructure(this.props.tracing)}
+                <Table.Cell>{formatSource(this.props.tracing)}</Table.Cell>
+                <Table.Cell>{this.props.tracing.nodeCount}</Table.Cell>
+            </Table.Row>
         );
     }
 }
@@ -120,25 +105,33 @@ export class UntransformedSwcTable extends React.Component<IUntransformedTablePr
 
     public render() {
         if (!this.state.hasLoaded) {
-            return (<h4>Loading...</h4>);
+            return (
+                <Message icon>
+                    <Icon name="circle notched" loading/>
+                    <Message.Content>
+                        <Message.Header content="Requesting content"/>
+                        We are retrieving untransformed system data.
+                    </Message.Content>
+                </Message>
+            );
         }
 
         const rows = this.state.tracings.map(tracing => (
             <UntransformedRow key={`tr_${tracing.id}`} tracing={tracing}/>));
 
         return (
-            <Table condensed>
-                <thead>
-                <tr>
-                    <th className="small"/>
-                    <th className="small">Id</th>
-                    <th className="small">SWC</th>
-                    <th className="small">Nodes</th>
-                </tr>
-                </thead>
-                <tbody>
-                {rows}
-                </tbody>
+            <Table attached="bottom" compact="very">
+                <Table.Header>
+                    <Table.Row>
+                        <Table.HeaderCell style={{maxWidth: "200px"}}/>
+                        <Table.HeaderCell>Id</Table.HeaderCell>
+                        <Table.HeaderCell>SWC</Table.HeaderCell>
+                        <Table.HeaderCell>Nodes</Table.HeaderCell>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {rows}
+                </Table.Body>
             </Table>
         );
     }
