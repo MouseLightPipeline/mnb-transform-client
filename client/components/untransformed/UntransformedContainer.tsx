@@ -9,21 +9,23 @@ export const UntransformedContainer = () => (
         <Segment secondary>
             <Header style={{margin: "0"}}>Untransformed SWC Tracings</Header>
         </Segment>
-        <UntransformedSwcQuery query={UNTRANSFORMED_SWC_QUERY} pollInterval={5000}>
-            {({loading, error, data}) => {
-                if (error) {
-                    return (
-                        <Message negative icon="exclamation triangle" header="Service not responding"
-                                 content="System data could not be loaded.  Will attempt again shortly."/>
-                    );
-                }
+        <Segment>
+            <UntransformedSwcQuery query={UNTRANSFORMED_SWC_QUERY} pollInterval={5000}>
+                {({loading, error, data}) => {
+                    if (error) {
+                        return (
+                            <Message negative icon="exclamation triangle" header="Service not responding"
+                                     content="System data could not be loaded.  Will attempt again shortly."/>
+                        );
+                    }
 
-                if (!loading && data.untransformedSwc.length === 0) {
-                    return "There are no untransformed tracings";
-                }
+                    if (!loading && data.untransformedSwc.length === 0) {
+                        return <Message positive content="There are no untransformed tracings"/>
+                    }
 
-                return (<UntransformedSwcTable loading={loading} untransformedSwc={data.untransformedSwc}/>);
-            }}
-        </UntransformedSwcQuery>
+                    return (<UntransformedSwcTable loading={loading} untransformedSwc={data.untransformedSwc}/>);
+                }}
+            </UntransformedSwcQuery>
+        </Segment>
     </Segment.Group>
 );

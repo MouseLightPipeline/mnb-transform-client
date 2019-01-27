@@ -1,5 +1,6 @@
 import {ISwcNode} from "./swcNode";
 import {ITracingStructure} from "./tracingStructure";
+import {INeuron} from "./neuron";
 
 export interface ISwcTracing {
     id: string;
@@ -12,6 +13,7 @@ export interface ISwcTracing {
     tracingStructure: ITracingStructure;
     nodeCount: number;
     firstNode: ISwcNode;
+    neuron: INeuron;
     createdAt: number;
     updatedAt: number;
 }

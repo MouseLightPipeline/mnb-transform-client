@@ -70,9 +70,17 @@ function formatTracingStructure(tracing: ITracing, cellStyle: any) {
 
     const structure = tracing.swcTracing.tracingStructure;
 
-    return (<td style={cellStyle}>{tracing.id.slice(0, 8)}<br/><img style={imageStyle}
-                                                                    src={structure.value === 1 ? axonImage : dendriteImage}/><br/>{structure.name}
-    </td>);
+    return (
+        <td style={cellStyle}>
+            {tracing.id.slice(0, 8)}
+            <br/>
+            {tracing.swcTracing.neuron.idString}
+            <br/>
+            <img style={imageStyle} src={structure.value === 1 ? axonImage : dendriteImage}/>
+            <br/>
+            {structure.name}
+        </td>
+    );
 }
 
 const errorContent = (errors: any) => {
@@ -134,7 +142,7 @@ export class TracingRow extends React.Component<ITracingRowProps, {}> {
 
         return (
             <Table.Row onClick={() => this.props.onSelectTracing(this.props.tracing)}
-                style={this.props.isSelected ? rowStyles.selected : rowStyles.unselected}>
+                       style={this.props.isSelected ? rowStyles.selected : rowStyles.unselected}>
                 {formatTracingStructure(this.props.tracing, cellStyle)}
                 <td style={cellStyle}>{formatSource(this.props.tracing.swcTracing)}</td>
                 <td style={cellStyle}>{this.props.tracing.nodeCount}</td>
