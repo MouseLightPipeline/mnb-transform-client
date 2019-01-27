@@ -1,6 +1,9 @@
 export enum TracingStructure {
-    axon = 1,
-    dendrite = 2
+    any = -1,       // No selection
+    axon = 1,       // Must match value used in API
+    dendrite = 2,   // Must match value used in API
+    soma = 3,       // UI-only what to display for a neuron
+    all = 4         // Same as above
 }
 
 export const AnyTracingStructureId = "ANY";
