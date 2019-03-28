@@ -1,3 +1,15 @@
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+div#root {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    flex-basis: 100%
+}
+
 .toastify {
     z-index: 10000;
 }

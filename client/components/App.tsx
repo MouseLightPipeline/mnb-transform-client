@@ -5,7 +5,7 @@ import {ToastContainer, ToastPosition} from "react-toastify";
 
 import {Content} from "./Content";
 import {SYSTEM_MESSAGE_QUERY, SystemMessageQuery} from "../graphql/systemMessage";
-import {TracingViewer} from "./viewer/TracingViewer";
+import {TracingViewerContainer} from "./viewer/TracingViewerContainer";
 
 const logo = require("file-loader!../../assets/mouseLight_nb_color.svg");
 
@@ -39,17 +39,17 @@ const PageHeader = () => (
 );
 
 export const App = () => (
-    <div>
+    <div style={{display: "flex", flexDirection: "column", flexGrow: 1}}>
         <ToastContainer autoClose={3000} position={"bottom-center" as  ToastPosition} style={toastStyleOverride}/>
         <PageHeader/>
-        <div style={{marginTop: "62px", padding: "20px"}}>
+        <div style={{marginTop: "62px", padding: "10px", order: 1, flexGrow: 1, display: "flex", flexDirection: "column"}}>
             <Switch>
                 <Route path="/" exact render={() => (<Content/>)}/>
                 <Route path="/tracings" render={() => (<Content/>)}/>
-                <Route path="/viewer" render={() => (<TracingViewer/>)}/>
+                <Route path="/viewer" render={() => (<TracingViewerContainer/>)}/>
             </Switch>
         </div>
-        <Segment size="small" attached="bottom" inverted>
+        <Segment size="small" attached="bottom" inverted style={{order: 2}}>
             Mouse Light Neuron Browser Copyright © 2016 - {(new Date().getFullYear())} Howard Hughes Medical
             Institute
         </Segment>

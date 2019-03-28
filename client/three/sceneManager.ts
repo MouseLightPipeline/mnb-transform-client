@@ -60,7 +60,7 @@ export class SceneManager {
             antialias: true
         });
 
-        this.renderer.setClearColor(new THREE.Color(0.98, 0.98, 0.98), 1);
+        this.renderer.setClearColor(new THREE.Color(0.90, 0.90, 0.90), 1);
 
         this.renderer.setSize(width, height);
 
@@ -97,7 +97,7 @@ export class SceneManager {
         this.trackControls = new OrbitControls(this.camera, container);
         this.trackControls.addEventListener("change", () => this.render());
 
-        window.addEventListener("resize", () => this.setSize(container.clientWidth, container.clientHeight/*this.renderer.getSize().height*/));
+        window.addEventListener("resize", () => this.setSize(container.clientWidth, container.clientHeight));
     };
 
     public animate(timestamp: number = null) {
