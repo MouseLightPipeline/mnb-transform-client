@@ -74,7 +74,7 @@ function formatTracingStructure(tracing: ITracing, cellStyle: any) {
         <td style={cellStyle}>
             {tracing.id.slice(0, 8)}
             <br/>
-            {tracing.swcTracing.neuron.idString}
+            {tracing.swcTracing?.neuron?.idString ?? ""}
             <br/>
             <img style={imageStyle} src={structure.value === 1 ? axonImage : dendriteImage}/>
             <br/>
